@@ -22,3 +22,5 @@ artifacts:
   files:
     - "**/*"
   discard-paths: yes
+  exclude:
+    - "node_modules/**/*"
