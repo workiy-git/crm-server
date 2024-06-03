@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const uri = "mongodb+srv://newapiuser2:Workiy%402024@cluster0.qipjc4f.mongodb.net/crm?retryWrites=true&w=majority";
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://raguworkiy:Ragu%401978@cluster0.qipjc4f.mongodb.net/crm?retryWrites=true&w=majority";
 
 
 const connectToDatabase = async () => {
@@ -12,4 +13,6 @@ const connectToDatabase = async () => {
   }
 };
 
+
 module.exports = connectToDatabase;
+
