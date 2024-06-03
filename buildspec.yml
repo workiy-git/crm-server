@@ -23,5 +23,3 @@ artifacts:
   discard-paths: yes
   name: my-artifact.zip
   bucket-name: crm-api-server-deploy
-  exclude:
-    - "node_modules/**/*"
