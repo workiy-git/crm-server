@@ -16,7 +16,7 @@ const PagesRoutes = require("./model/Pages");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.get("/hello", (req, res) => {
-  res.send({ application: "sample-app", version: "1" });
+  res.send({ application: "sample-app - index", version: "1" });
 });
 
 app.use(cors());
