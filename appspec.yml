@@ -1,9 +1,9 @@
 version: 0.0
 Resources:
-  myLambdaFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Name: "sample-app-dev-app"
-      Alias: "$LATEST"
-      CurrentVersion: "4"
-      TargetVersion: "5"
+  - myLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: "sample-app-dev-app"
+        Alias: "sample-app-dev-app"
+        CurrentVersion: "4"
+        TargetVersion: "5"
