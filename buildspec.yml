@@ -17,9 +17,11 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
+      - zip -r lambda.zip .
 artifacts:
   files:
-    - "**/*"
+    - lambda.zip
   discard-paths: yes
-  name: my-artifact.zip
+  name: lambda-artifact
+  base-directory: ./
   bucket-name: crm-api-server-deploy
