@@ -1,29 +1,23 @@
 // server.js
 
-const express = require("express");
+import express from "express";
 const app = express();
 const port = 5000;
-const connectToDatabase = require("./config/database");
-const cors = require("cors");
-const apiRoutes = require("./routes/api");
+import cors from "cors";
 
-const MenuRoutes = require("./model/menu");
-const LoginRoutes = require("./model/login");
-const webformRouter = require("./model/webformintegration");
-const PagesRoutes = require("./model/Pages");
+import routes from "./routers/index.js";
+
+import connectToDatabase from "./middlewares/database.js";
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", MenuRoutes);
-app.use("/api", LoginRoutes);
-app.use("/api", webformRouter);
-app.use("/api", PagesRoutes);
+app.use(connectToDatabase);
 
-// Connect to MongoDB
-connectToDatabase();
-
-app.use("/api", apiRoutes);
+app.get("/test", (req, res) => {
+  res.send("Hello from the example route!");
+});
+app.use("/api", routes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
