@@ -1,10 +1,10 @@
 import express from "express";
 import loginRouter from "./loginRouter.js";
-import userinfoRouter from "./userinfoRouter.js";
+import webformintegrationRouter from "./webformintegrationRouter.js" 
 
 const router = express.Router();
 
 router.use("/login", loginRouter);
-router.use("/userinfo", userinfoRouter);
+router.use("/webformintegration", webformintegrationRouter);
 
 export default router;

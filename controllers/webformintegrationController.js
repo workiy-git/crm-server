@@ -1,11 +1,11 @@
 import config from "../config/config.js";
 
 const getCollection = (req) => {
-  return req.db.collection(config.UserinfoCollectionName);
+  return req.db.collection(config.webformintegrationCollectionName);
 };
 
 // Read all
-export const getAllUserinfoData = async (req, res) => {
+export const getAllWebformintegrationData = async (req, res) => {
   console.log("Get all data");
   try {
     const collection = await getCollection(req); // replace 'collection_name' with the actual collection name
@@ -22,10 +22,10 @@ export const getAllUserinfoData = async (req, res) => {
   }
 };
 
-// Create a new Userinfo data
-export const createUserinfoData = async (req, res) => {
+// Create a new Webformintegration data
+export const createWebformintegrationData = async (req, res) => {
   try {
-    const collection = await getCollection("Userinfo");
+    const collection = await getCollection("Webformintegration");
     const result = await collection.insertOne(req.body);
     res.status(201).json({
       status: "success",
@@ -39,10 +39,10 @@ export const createUserinfoData = async (req, res) => {
   }
 };
 
-// Get a single Userinfo data by ID
-export const getUserinfoData = async (req, res) => {
+// Get a single Webformintegration data by ID
+export const getWebformintegrationData = async (req, res) => {
   try {
-    const collection = await getCollection("Userinfo");
+    const collection = await getCollection("Webformintegration");
     const data = await collection.findOne({ _id: req.params.id });
     res.status(200).json({
       status: "success",
@@ -56,10 +56,10 @@ export const getUserinfoData = async (req, res) => {
   }
 };
 
-// Update a Userinfo data by ID
-export const updateUserinfoData = async (req, res) => {
+// Update a Webformintegration data by ID
+export const updateWebformintegrationData = async (req, res) => {
   try {
-    const collection = await getCollection("Userinfo");
+    const collection = await getCollection("Webformintegration");
     const result = await collection.updateOne(
       { _id: req.params.id },
       { $set: req.body }
@@ -76,10 +76,10 @@ export const updateUserinfoData = async (req, res) => {
   }
 };
 
-// Delete a Userinfo data by ID
-export const deleteUserinfoData = async (req, res) => {
+// Delete a Webformintegration data by ID
+export const deleteWebformintegrationData = async (req, res) => {
   try {
-    const collection = await getCollection("Userinfo");
+    const collection = await getCollection("Webformintegration");
     const result = await collection.deleteOne({ _id: req.params.id });
     res.status(200).json({
       status: "success",
