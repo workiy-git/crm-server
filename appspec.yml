@@ -6,3 +6,4 @@ Resources:
         Name: "sample-app-dev-app"
         alias: "alias4"
         CurrentVersion: "4"
+        TargetVersion: "4"
