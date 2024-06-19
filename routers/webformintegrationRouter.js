@@ -5,20 +5,20 @@ import {
   getWebformintegrationData,
   updateWebformintegrationData,
   deleteWebformintegrationData,
-} from "../controllers/webformintegrationController.js";
+} from "../controllers/WebformintegrationController.js";
 
 const router = express.Router();
 
 // Route to get all Webformintegration data
 router.get("/", getAllWebformintegrationData);
 
-// Route to create new Webformintegration data
+// Route to create Webformintegration data
 router.post("/", createWebformintegrationData);
 
 // Route to get a single Webformintegration data by ID
 router.get("/:id", getWebformintegrationData);
 
-// Route to update a Webformintegration data by ID
+// Route to update Webformintegration data
 router.put("/:id", updateWebformintegrationData);
 
 // Route to delete a Webformintegration data by ID

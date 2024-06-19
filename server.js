@@ -1,12 +1,9 @@
-// server.js
-
 import express from "express";
 const app = express();
 const port = 5000;
 import cors from "cors";
 
 import routes from "./routers/index.js";
-
 import connectToDatabase from "./middlewares/database.js";
 
 app.use(cors());
