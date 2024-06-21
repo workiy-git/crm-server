@@ -10,7 +10,6 @@ const apiRoutes = require("./routes/api");
 
 const MenuRoutes = require("./model/menu");
 const LoginRoutes = require("./model/login");
-const webformRouter = require("./model/webformintegration");
 const PagesRoutes = require("./model/Pages");
 
 app.use(express.urlencoded({ extended: true }));
@@ -27,7 +26,6 @@ connectToDatabase();
 
 app.use("/api", MenuRoutes);
 app.use("/api", LoginRoutes);
-app.use("/api", webformRouter);
 app.use("/api", PagesRoutes);
 
 app.use("/api", apiRoutes);
