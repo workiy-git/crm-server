@@ -8,11 +8,11 @@ const getCollection = (req) => {
 export const getAllPagesData = async (req, res) => {
   console.log("Get all data");
   try {
-    const collection = await getCollection(req); // replace 'collection_name' with the actual collection name
-    const data = await collection.find().toArray();
+    const collection = await getCollection(req);
+    const data = await collection.findOne(); // Assuming there's only one document
     res.status(200).json({
       status: "success",
-      data: data,
+      data: data.pages,
     });
   } catch (error) {
     res.status(500).json({
@@ -25,12 +25,26 @@ export const getAllPagesData = async (req, res) => {
 // Create a new page data
 export const createPagesData = async (req, res) => {
   try {
-    const collection = await getCollection("pages");
-    const result = await collection.insertOne(req.body);
-    res.status(201).json({
-      status: "success",
-      data: result.ops[0],
-    });
+    const collection = await getCollection(req);
+    const newPage = req.body.page;
+    const title = newPage.title;
+
+    const updateResult = await collection.updateOne(
+      {},
+      { $set: { [`pages.${title}`]: newPage } }
+    );
+
+    if (updateResult.modifiedCount > 0) {
+      res.status(201).json({
+        status: "success",
+        data: newPage,
+      });
+    } else {
+      res.status(500).json({
+        status: "failure",
+        message: "Failed to create new page",
+      });
+    }
   } catch (error) {
     res.status(500).json({
       status: "failure",
@@ -39,34 +53,16 @@ export const createPagesData = async (req, res) => {
   }
 };
 
-// Get a single pages data by ID
-export const getPagesData = async (req, res) => {
+// Get a single pages data by title
+export const getPagesDataByTitle = async (req, res) => {
   try {
-    const collection = await getCollection("pages");
-    const data = await collection.findOne({ _id: req.params.id });
-    res.status(200).json({
-      status: "success",
-      data: data,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
-};
-
-// Get pages data by title
-export const getPagesByTitle = async (req, res) => {
-  try {
-    const collection = await getCollection("pages");
+    const collection = await getCollection(req);
     const title = req.params.title;
-    console.log(title);
-    const data = await collection.findOne({ "page.title": title });
+    const data = await collection.findOne({ [`pages.${title}`]: { $exists: true } });
     if (data) {
       res.status(200).json({
         status: "success",
-        data: data,
+        data: data.pages[title],
       });
     } else {
       res.status(404).json({
@@ -82,18 +78,27 @@ export const getPagesByTitle = async (req, res) => {
   }
 };
 
-// Update a page data by ID
-export const updatePagesData = async (req, res) => {
+// Update a page data by title
+export const updatePagesDataByTitle = async (req, res) => {
   try {
-    const collection = await getCollection("pages");
-    const result = await collection.updateOne(
-      { _id: req.params.id },
-      { $set: req.body }
+    const collection = await getCollection(req);
+    const title = req.params.title;
+    const updateResult = await collection.updateOne(
+      { [`pages.${title}`]: { $exists: true } },
+      { $set: { [`pages.${title}`]: req.body.page } }
     );
-    res.status(200).json({
-      status: "success",
-      data: result,
-    });
+
+    if (updateResult.matchedCount === 0) {
+      res.status(404).json({
+        status: "not found",
+        message: "Page not found with the given title",
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        data: req.body.page,
+      });
+    }
   } catch (error) {
     res.status(500).json({
       status: "failure",
@@ -102,15 +107,27 @@ export const updatePagesData = async (req, res) => {
   }
 };
 
-// Delete a pages data by ID
-export const deletePagesData = async (req, res) => {
+// Delete a pages data by title
+export const deletePagesDataByTitle = async (req, res) => {
   try {
-    const collection = await getCollection("pages");
-    const result = await collection.deleteOne({ _id: req.params.id });
-    res.status(200).json({
-      status: "success",
-      data: result,
-    });
+    const collection = await getCollection(req);
+    const title = req.params.title;
+    const updateResult = await collection.updateOne(
+      { [`pages.${title}`]: { $exists: true } },
+      { $unset: { [`pages.${title}`]: "" } }
+    );
+
+    if (updateResult.modifiedCount === 0) {
+      res.status(404).json({
+        status: "not found",
+        message: "Page not found with the given title",
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        message: "Page deleted successfully",
+      });
+    }
   } catch (error) {
     res.status(500).json({
       status: "failure",
