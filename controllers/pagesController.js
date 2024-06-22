@@ -4,15 +4,15 @@ const getCollection = (req) => {
   return req.db.collection(config.pagesCollectionName);
 };
 
-// Read all
+// Read all pages
 export const getAllPagesData = async (req, res) => {
   console.log("Get all data");
   try {
     const collection = await getCollection(req);
-    const data = await collection.findOne(); // Assuming there's only one document
+    const data = await collection.find({}).toArray(); // Fetch all documents
     res.status(200).json({
       status: "success",
-      data: data.pages,
+      data: data,
     });
   } catch (error) {
     res.status(500).json({
@@ -22,19 +22,15 @@ export const getAllPagesData = async (req, res) => {
   }
 };
 
-// Create a new page data
+// Create a new page
 export const createPagesData = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const newPage = req.body.page;
-    const title = newPage.title;
 
-    const updateResult = await collection.updateOne(
-      {},
-      { $set: { [`pages.${title}`]: newPage } }
-    );
+    const insertResult = await collection.insertOne(newPage);
 
-    if (updateResult.modifiedCount > 0) {
+    if (insertResult.acknowledged && insertResult.insertedId) {
       res.status(201).json({
         status: "success",
         data: newPage,
@@ -53,16 +49,16 @@ export const createPagesData = async (req, res) => {
   }
 };
 
-// Get a single pages data by title
+// Get a single page by title
 export const getPagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
-    const data = await collection.findOne({ [`pages.${title}`]: { $exists: true } });
+    const data = await collection.findOne({ title: title });
     if (data) {
       res.status(200).json({
         status: "success",
-        data: data.pages[title],
+        data: data,
       });
     } else {
       res.status(404).json({
@@ -78,14 +74,23 @@ export const getPagesDataByTitle = async (req, res) => {
   }
 };
 
-// Update a page data by title
+// Update a page by title
 export const updatePagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
+    const updatedPage = req.body.page;
+
+    if (!updatedPage) {
+      return res.status(400).json({
+        status: "failure",
+        message: "No page data provided for update",
+      });
+    }
+
     const updateResult = await collection.updateOne(
-      { [`pages.${title}`]: { $exists: true } },
-      { $set: { [`pages.${title}`]: req.body.page } }
+      { title: title },
+      { $set: updatedPage }
     );
 
     if (updateResult.matchedCount === 0) {
@@ -96,7 +101,7 @@ export const updatePagesDataByTitle = async (req, res) => {
     } else {
       res.status(200).json({
         status: "success",
-        data: req.body.page,
+        data: updatedPage,
       });
     }
   } catch (error) {
@@ -107,17 +112,14 @@ export const updatePagesDataByTitle = async (req, res) => {
   }
 };
 
-// Delete a pages data by title
+// Delete a page by title
 export const deletePagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
-    const updateResult = await collection.updateOne(
-      { [`pages.${title}`]: { $exists: true } },
-      { $unset: { [`pages.${title}`]: "" } }
-    );
+    const deleteResult = await collection.deleteOne({ title: title });
 
-    if (updateResult.modifiedCount === 0) {
+    if (deleteResult.deletedCount === 0) {
       res.status(404).json({
         status: "not found",
         message: "Page not found with the given title",
