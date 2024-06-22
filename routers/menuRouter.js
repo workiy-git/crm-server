@@ -3,7 +3,7 @@ const {
   getAllMenuData,
   createMenuData,
   getMenuData,
-  updateMenuData,
+  updateMenuDatabyID,
   deleteMenuData,
 } = require("../controllers/menuController.js");
 
@@ -16,10 +16,11 @@ router.get("/", getAllMenuData);
 router.post("/", createMenuData);
 
 // Route to get a single Menu data by ID
-router.get("/:id", getMenuData);
+
+router.get("/:menu", getMenuData);
 
 // Route to update a Menu data by ID
-router.put("/:id", updateMenuData);
+router.put("/:id", updateMenuDatabyID);
 
 // Route to delete a Menu data by ID
 router.delete("/:id", deleteMenuData);

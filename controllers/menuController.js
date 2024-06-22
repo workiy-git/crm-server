@@ -40,8 +40,12 @@ const createMenuData = async (req, res) => {
 
 const getMenuData = async (req, res) => {
   try {
+    const menuId = String(req.params.menu);
+
     const collection = await getCollection(req);
-    const data = await collection.findOne({ _id: new ObjectId(req.params.id) });
+    const data = await collection.findOne({
+      menu: menuId,
+    });
     res.status(200).json({
       status: "success",
       data: data,
@@ -54,7 +58,7 @@ const getMenuData = async (req, res) => {
   }
 };
 
-const updateMenuData = async (req, res) => {
+const updateMenuDatabyID = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const result = await collection.updateOne(
@@ -95,6 +99,6 @@ module.exports = {
   getAllMenuData,
   createMenuData,
   getMenuData,
-  updateMenuData,
+  updateMenuDatabyID,
   deleteMenuData,
 };
