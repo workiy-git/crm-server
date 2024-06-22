@@ -1,10 +1,10 @@
-import express from "express";
+const express = require("express");
 const app = express();
 const port = 5000;
-import cors from "cors";
+const cors = require("cors");
 
-import routes from "./routers/index.js";
-import connectToDatabase from "./middlewares/database.js";
+const routes = require("./routers/index.js");
+const connectToDatabase = require("./middlewares/database.js");
 
 app.use(cors());
 app.use(express.json());

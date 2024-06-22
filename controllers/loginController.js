@@ -1,14 +1,14 @@
-import config from "../config/config.js";
+const config = require("../config/config.js");
+const { ObjectId } = require("mongodb"); // Assuming MongoDB for _id handling
 
 const getCollection = (req) => {
   return req.db.collection(config.loginCollectionName);
 };
 
-// Read all
-export const getAllLoginData = async (req, res) => {
+const getAllLoginData = async (req, res) => {
   console.log("Get all data");
   try {
-    const collection = await getCollection(req); // replace 'collection_name' with the actual collection name
+    const collection = await getCollection(req);
     const data = await collection.find().toArray();
     res.status(200).json({
       status: "success",
@@ -22,10 +22,9 @@ export const getAllLoginData = async (req, res) => {
   }
 };
 
-// Create a new login data
-export const createLoginData = async (req, res) => {
+const createLoginData = async (req, res) => {
   try {
-    const collection = await getCollection("login");
+    const collection = await getCollection(req);
     const result = await collection.insertOne(req.body);
     res.status(201).json({
       status: "success",
@@ -39,11 +38,10 @@ export const createLoginData = async (req, res) => {
   }
 };
 
-// Get a single login data by ID
-export const getLoginData = async (req, res) => {
+const getLoginData = async (req, res) => {
   try {
-    const collection = await getCollection("login");
-    const data = await collection.findOne({ _id: req.params.id });
+    const collection = await getCollection(req);
+    const data = await collection.findOne({ _id: new ObjectId(req.params.id) });
     res.status(200).json({
       status: "success",
       data: data,
@@ -56,12 +54,11 @@ export const getLoginData = async (req, res) => {
   }
 };
 
-// Update a login data by ID
-export const updateLoginData = async (req, res) => {
+const updateLoginData = async (req, res) => {
   try {
-    const collection = await getCollection("login");
+    const collection = await getCollection(req);
     const result = await collection.updateOne(
-      { _id: req.params.id },
+      { _id: new ObjectId(req.params.id) },
       { $set: req.body }
     );
     res.status(200).json({
@@ -76,11 +73,12 @@ export const updateLoginData = async (req, res) => {
   }
 };
 
-// Delete a login data by ID
-export const deleteLoginData = async (req, res) => {
+const deleteLoginData = async (req, res) => {
   try {
-    const collection = await getCollection("login");
-    const result = await collection.deleteOne({ _id: req.params.id });
+    const collection = await getCollection(req);
+    const result = await collection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
     res.status(200).json({
       status: "success",
       data: result,
@@ -91,4 +89,12 @@ export const deleteLoginData = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+module.exports = {
+  getAllLoginData,
+  createLoginData,
+  getLoginData,
+  updateLoginData,
+  deleteLoginData,
 };

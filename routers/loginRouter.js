@@ -1,11 +1,11 @@
-import express from "express";
-import {
+const express = require("express");
+const {
   getAllLoginData,
   createLoginData,
   getLoginData,
   updateLoginData,
   deleteLoginData,
-} from "../controllers/loginController.js";
+} = require("../controllers/loginController.js");
 
 const router = express.Router();
 
@@ -24,4 +24,4 @@ router.put("/:id", updateLoginData);
 // Route to delete a login data by ID
 router.delete("/:id", deleteLoginData);
 
-export default router;
+module.exports = router;

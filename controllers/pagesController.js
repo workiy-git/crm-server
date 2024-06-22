@@ -1,11 +1,11 @@
-import config from "../config/config.js";
+const config = require("../config/config.js");
 
 const getCollection = (req) => {
   return req.db.collection(config.pagesCollectionName);
 };
 
 // Read all
-export const getAllPagesData = async (req, res) => {
+const getAllPagesData = async (req, res) => {
   console.log("Get all data");
   try {
     const collection = await getCollection(req);
@@ -23,7 +23,7 @@ export const getAllPagesData = async (req, res) => {
 };
 
 // Create a new page data
-export const createPagesData = async (req, res) => {
+const createPagesData = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const newPage = req.body.page;
@@ -54,7 +54,7 @@ export const createPagesData = async (req, res) => {
 };
 
 // Get a single pages data by title
-export const getPagesDataByTitle = async (req, res) => {
+const getPagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
@@ -81,7 +81,7 @@ export const getPagesDataByTitle = async (req, res) => {
 };
 
 // Update a page data by title
-export const updatePagesDataByTitle = async (req, res) => {
+const updatePagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
@@ -110,7 +110,7 @@ export const updatePagesDataByTitle = async (req, res) => {
 };
 
 // Delete a pages data by title
-export const deletePagesDataByTitle = async (req, res) => {
+const deletePagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
@@ -136,4 +136,12 @@ export const deletePagesDataByTitle = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+module.exports = {
+  getAllPagesData,
+  createPagesData,
+  getPagesDataByTitle,
+  updatePagesDataByTitle,
+  deletePagesDataByTitle,
 };

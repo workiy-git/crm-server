@@ -1,11 +1,11 @@
-import express from "express";
-import {
+const express = require("express");
+const {
   getAllMenuData,
   createMenuData,
   getMenuData,
   updateMenuData,
   deleteMenuData,
-} from "../controllers/menuController.js";
+} = require("../controllers/menuController.js");
 
 const router = express.Router();
 
@@ -24,4 +24,4 @@ router.put("/:id", updateMenuData);
 // Route to delete a Menu data by ID
 router.delete("/:id", deleteMenuData);
 
-export default router;
+module.exports = router;

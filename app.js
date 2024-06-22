@@ -1,11 +1,11 @@
-import serverless from "serverless-http";
-import express from "express";
+const serverless = require("serverless-http");
+const express = require("express");
 
 const app = express();
 
-import cors from "cors";
-import routes from "./routers/index.js";
-import connectToDatabase from "./middlewares/database.js";
+const cors = require("cors");
+const routes = require("./routers/index.js");
+const connectToDatabase = require("./middlewares/database.js");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -22,4 +22,6 @@ app.get("/api/info", (req, res) => {
 
 //app.listen(3000, () => console.log(`Listening on: 3000`));
 
-export const handler = serverless(app);
+// export const handler = serverless(app);
+
+module.exports.handler = serverless(app);

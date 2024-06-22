@@ -1,11 +1,11 @@
-import config from "../config/config.js";
+const config = require("../config/config.js");
 
 const getWebFormCollection = (req) => {
   return req.db.collection(config.webFormCollectionName);
 };
 
 // Read all web form data
-export const getWebFormData = async (req, res) => {
+const getWebFormData = async (req, res) => {
   console.log("Fetching all web form data");
   try {
     const collection = await getWebFormCollection(req);
@@ -23,7 +23,7 @@ export const getWebFormData = async (req, res) => {
 };
 
 // Create new web form data
-export const createWebFormData = async (req, res) => {
+const createWebFormData = async (req, res) => {
   console.log("Creating new web form data");
   try {
     const collection = await getWebFormCollection(req);
@@ -41,7 +41,7 @@ export const createWebFormData = async (req, res) => {
 };
 
 // Get web form data by ID
-export const getWebFormDataById = async (req, res) => {
+const getWebFormDataById = async (req, res) => {
   console.log(`Fetching web form data with ID: ${req.params.pageName}`);
   try {
     const collection = await getWebFormCollection(req);
@@ -65,7 +65,7 @@ export const getWebFormDataById = async (req, res) => {
 };
 
 // Update web form data by ID
-export const updateWebFormDataById = async (req, res) => {
+const updateWebFormDataById = async (req, res) => {
   console.log(`Updating web form data with ID: ${req.params.id}`);
   try {
     const collection = await getWebFormCollection(req);
@@ -92,7 +92,7 @@ export const updateWebFormDataById = async (req, res) => {
 };
 
 // Delete web form data by ID
-export const deleteWebFormDataById = async (req, res) => {
+const deleteWebFormDataById = async (req, res) => {
   console.log(`Deleting web form data with ID: ${req.params.id}`);
   try {
     const collection = await getWebFormCollection(req);
@@ -113,4 +113,12 @@ export const deleteWebFormDataById = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+module.exports = {
+  getWebFormData,
+  createWebFormData,
+  getWebFormDataById,
+  updateWebFormDataById,
+  deleteWebFormDataById,
 };

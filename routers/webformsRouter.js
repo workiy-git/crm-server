@@ -1,11 +1,11 @@
-import express from "express";
-import {
+const express = require("express");
+const {
   getWebFormData,
   createWebFormData,
   getWebFormDataById,
   updateWebFormDataById,
   deleteWebFormDataById,
-} from "../controllers/webFormController.js";
+} = require("../controllers/webFormController.js");
 
 const router = express.Router();
 
@@ -24,4 +24,4 @@ router.put("/:id", updateWebFormDataById);
 // Route to delete web form data by ID
 router.delete("/:id", deleteWebFormDataById);
 
-export default router;
+module.exports = router;

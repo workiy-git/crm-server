@@ -1,11 +1,11 @@
-import express from "express";
-import {
+const express = require("express");
+const {
   getAllPagesData,
   createPagesData,
   getPagesDataByTitle,
   updatePagesDataByTitle,
   deletePagesDataByTitle,
-} from "../controllers/pagesController.js";
+} = require("../controllers/pagesController.js");
 
 const router = express.Router();
 
@@ -24,4 +24,4 @@ router.put("/:title", updatePagesDataByTitle);
 // Route to delete a page data by title
 router.delete("/:title", deletePagesDataByTitle);
 
-export default router;
+module.exports = router;

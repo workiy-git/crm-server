@@ -8,4 +8,4 @@ const config = {
   webFormCollectionName: "webforms", // Add your collection name here
 };
 
-export default config;
+module.exports = config;
