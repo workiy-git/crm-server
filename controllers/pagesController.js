@@ -57,14 +57,14 @@ const createPagesData = async (req, res) => {
 const getPagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
-    const title = req.params.title;
+    const titleValue = String(req.params.title);
     const data = await collection.findOne({
-      [`pages.${title}`]: { $exists: true },
+      title: titleValue,
     });
     if (data) {
       res.status(200).json({
         status: "success",
-        data: data.pages[title],
+        data: data,
       });
     } else {
       res.status(404).json({
