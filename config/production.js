@@ -4,8 +4,8 @@ const config = {
   dbUrl:
     "mongodb+srv://raguworkiy:Ragu%401978@cluster0.qipjc4f.mongodb.net/crm?retryWrites=true&w=majority",
   loginCollectionName: "Login", // Add your collection name here
-  pagesCollectionName: "Pages"// Add your collection name here
-
+  pagesCollectionName: "Pages", // Add your collection name here
+  webFormCollectionName: "webforms", // Add your collection name here
 };
 
 export default config;
