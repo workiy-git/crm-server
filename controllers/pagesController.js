@@ -58,7 +58,9 @@ export const getPagesDataByTitle = async (req, res) => {
   try {
     const collection = await getCollection(req);
     const title = req.params.title;
-    const data = await collection.findOne({ [`pages.${title}`]: { $exists: true } });
+    const data = await collection.findOne({
+      [`pages.${title}`]: { $exists: true },
+    });
     if (data) {
       res.status(200).json({
         status: "success",

@@ -1,20 +1,16 @@
 // server.js
-// server.js
 
-import express from "express";
-import serverless from "serverless-http";
-import cors from "cors";
+const express = require("express");
+const serverless = require("serverless-http");
+const app = express();
+const port = 5000;
+const cors = require("cors");
+
+// const connectToDatabase = require("./config/database");
+
 import routes from "./routers/index.js";
 import connectToDatabase from "./middlewares/database.js";
 
-const app = express();
-const port = 5000;
-
-// Unused imports and requires commented out for clarity
-// import apiRoutes from "./routes/api";
-// import MenuRoutes from "./model/menu";
-// import LoginRoutes from "./model/login";
-// import PagesRoutes from "./model/Pages";
 // const apiRoutes = require("./routes/api");
 
 // const MenuRoutes = require("./model/menu");
@@ -49,4 +45,4 @@ app.use("/api", routes);
 //   console.log(`Server is running on port ${port}`);
 // });
 
-export const handler = serverless(app);
+module.exports.handler = serverless(app);
