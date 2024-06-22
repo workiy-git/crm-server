@@ -7,10 +7,3 @@ Resources:
         alias: "alias4"
         CurrentVersion: "4"
         TargetVersion: "4"
-Hooks:
-  BeforeAllowTraffic:
-    - location: scripts/pre_traffic_hook.sh
-      timeout: 300
-  AfterAllowTraffic:
-    - location: scripts/post_traffic_hook.sh
-      timeout: 300
