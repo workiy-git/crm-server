@@ -18,12 +18,10 @@ phases:
     commands:
       - echo Build completed on `date`
       - zip -r lambda.zip .
-      - cp appspec.yml lambda.zip.d/
-
 artifacts:
   files:
     - lambda.zip
-    - lambda.zip.d/appspec.yml
+    - appspec.yml
   discard-paths: yes
   name: lambda-artifact
   base-directory: ./
