@@ -4,7 +4,9 @@ Resources:
       Type: AWS::Lambda::Function
       Properties:
         Name: "sample-app-dev-app"
-        Alias: "alias4"
+        alias: "alias4"
+        CurrentVersion: "4"
+        TargetVersion: "4"
 Hooks:
   BeforeAllowTraffic:
     - location: scripts/pre_traffic_hook.sh
