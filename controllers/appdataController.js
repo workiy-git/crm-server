@@ -22,6 +22,67 @@ const getAllAppData = async (req, res) => {
   }
 };
 
+// Function to get app data based on filter criteria
+const getAppDataBasedOnFilter = async (req, res) => {
+  console.log("Fetching app data based on filter");
+  // Check if req.body exists
+  if (!req.body) {
+    // Handle the absence of req.body
+    // For example, send a 400 Bad Request response
+    res.status(400).json({
+      status: "fail",
+      message: "No data provided in the request body.",
+    });
+    return; // Stop execution of the function
+  }
+
+  try {
+    // Extract filter criteria from request body
+
+    // Initialize an empty object for filterCriteria
+    let filterCriteria = {};
+
+    // Iterate over the keys of req.body
+    Object.keys(req.body).forEach((key) => {
+      // If the value is not undefined, add it to filterCriteria
+      if (req.body[key] !== undefined) {
+        filterCriteria[key] = req.body[key];
+      }
+    });
+    // const filterCriteria = {
+    //   pageName: req.body.pageName,
+    //   call_status: req.body.calls_status, // Ensure this matches your database field
+    // };
+
+    // // Remove undefined filter criteria
+    // Object.keys(filterCriteria).forEach(
+    //   (key) => filterCriteria[key] === undefined && delete filterCriteria[key]
+    // );
+
+    console.log(filterCriteria);
+
+    const collection = await getAppDataCollection(req);
+    // Query the database with the filter criteria
+    const filteredData = await collection
+      .aggregate([
+        { $match: filterCriteria },
+        // Add any additional aggregation stages here
+      ])
+      .toArray();
+    // Send the filtered data as response
+    res.status(200).json({
+      status: "success",
+      data: filteredData,
+    });
+  } catch (error) {
+    // Send error response
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
 // Create new app data
 const createAppData = async (req, res) => {
   console.log("Creating new app data");
@@ -152,4 +213,5 @@ module.exports = {
   getAppDataByKey,
   updateAppDataByKey,
   deleteAppDataByKey,
+  getAppDataBasedOnFilter,
 };
