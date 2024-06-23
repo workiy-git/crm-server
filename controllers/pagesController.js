@@ -9,7 +9,7 @@ const getAllPagesData = async (req, res) => {
   console.log("Get all data");
   try {
     const collection = await getCollection(req);
-    const data = await collection.findOne(); // Assuming there's only one document
+    const data = await collection.find().toArray(); // Assuming there's only one document
     res.status(200).json({
       status: "success",
       data: data.pages,

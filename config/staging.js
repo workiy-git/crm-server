@@ -7,6 +7,7 @@ const config = {
   pagesCollectionName: "pages", // Add your collection name here
   webFormCollectionName: "webforms", // Add your collection name here
   usersCollectionName: "users",
+  appdataCollectionName: "appdata",
 };
 
 module.exports = config;
