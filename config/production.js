@@ -6,6 +6,7 @@ const config = {
   MenuCollectionName: "menus", // Add your collection name here
   pagesCollectionName: "pages", // Add your collection name here
   webFormCollectionName: "webforms", // Add your collection name here
+  usersCollectionName: "users",
 };
 
 module.exports = config;
