@@ -8,6 +8,7 @@ const config = {
   webFormCollectionName: "webforms", // Add your collection name here
   usersCollectionName: "users",
   appdataCollectionName: "appdata",
+  channelPartnerCollectionName : "channelPartner", // Add your collection name here
 };
 
 module.exports = config;
