@@ -1,14 +1,14 @@
-import config from "../config/config.js";
+const config = require("../config/config.js");
+const { ObjectId } = require("mongodb"); // Assuming MongoDB for _id handling
 
 const getCollection = (req) => {
   return req.db.collection(config.MenuCollectionName);
 };
 
-// Read all
-export const getAllMenuData = async (req, res) => {
+const getAllMenuData = async (req, res) => {
   console.log("Get all data");
   try {
-    const collection = await getCollection(req); // replace 'collection_name' with the actual collection name
+    const collection = await getCollection(req);
     const data = await collection.find().toArray();
     res.status(200).json({
       status: "success",
@@ -22,10 +22,9 @@ export const getAllMenuData = async (req, res) => {
   }
 };
 
-// Create a new Menu data
-export const createMenuData = async (req, res) => {
+const createMenuData = async (req, res) => {
   try {
-    const collection = await getCollection("Menu");
+    const collection = await getCollection(req);
     const result = await collection.insertOne(req.body);
     res.status(201).json({
       status: "success",
@@ -39,11 +38,14 @@ export const createMenuData = async (req, res) => {
   }
 };
 
-// Get a single Menu data by ID
-export const getMenuData = async (req, res) => {
+const getMenuData = async (req, res) => {
   try {
-    const collection = await getCollection("Menu");
-    const data = await collection.findOne({ _id: req.params.id });
+    const menuId = String(req.params.menu);
+
+    const collection = await getCollection(req);
+    const data = await collection.findOne({
+      menu: menuId,
+    });
     res.status(200).json({
       status: "success",
       data: data,
@@ -56,12 +58,11 @@ export const getMenuData = async (req, res) => {
   }
 };
 
-// Update a Menu data by ID
-export const updateMenuData = async (req, res) => {
+const updateMenuDatabyID = async (req, res) => {
   try {
-    const collection = await getCollection("Menu");
+    const collection = await getCollection(req);
     const result = await collection.updateOne(
-      { _id: req.params.id },
+      { _id: new ObjectId(req.params.id) },
       { $set: req.body }
     );
     res.status(200).json({
@@ -76,11 +77,12 @@ export const updateMenuData = async (req, res) => {
   }
 };
 
-// Delete a Menu data by ID
-export const deleteMenuData = async (req, res) => {
+const deleteMenuData = async (req, res) => {
   try {
-    const collection = await getCollection("Menu");
-    const result = await collection.deleteOne({ _id: req.params.id });
+    const collection = await getCollection(req);
+    const result = await collection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
     res.status(200).json({
       status: "success",
       data: result,
@@ -91,4 +93,12 @@ export const deleteMenuData = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+module.exports = {
+  getAllMenuData,
+  createMenuData,
+  getMenuData,
+  updateMenuDatabyID,
+  deleteMenuData,
 };

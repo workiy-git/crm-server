@@ -1,7 +1,5 @@
-// middlewares/database.js
-
-import mongoose from "mongoose";
-import config from "../config/config.js";
+const mongoose = require("mongoose");
+const config = require("../config/config.js");
 const dbUrl = config.dbUrl;
 
 const connectToDatabase = async (req, res, next) => {
@@ -23,4 +21,4 @@ const connectToDatabase = async (req, res, next) => {
   }
 };
 
-export default connectToDatabase;
+module.exports = connectToDatabase;

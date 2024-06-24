@@ -21,6 +21,7 @@ phases:
 artifacts:
   files:
     - lambda.zip
+    - appspec.yml
   discard-paths: yes
   name: lambda-artifact
   base-directory: ./

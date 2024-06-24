@@ -1,11 +1,11 @@
-import express from "express";
-import {
+const express = require("express");
+const {
   getAllMenuData,
   createMenuData,
   getMenuData,
-  updateMenuData,
+  updateMenuDatabyID,
   deleteMenuData,
-} from "../controllers/menuController.js";
+} = require("../controllers/menuController.js");
 
 const router = express.Router();
 
@@ -16,12 +16,13 @@ router.get("/", getAllMenuData);
 router.post("/", createMenuData);
 
 // Route to get a single Menu data by ID
-router.get("/:id", getMenuData);
+
+router.get("/:menu", getMenuData);
 
 // Route to update a Menu data by ID
-router.put("/:id", updateMenuData);
+router.put("/:id", updateMenuDatabyID);
 
 // Route to delete a Menu data by ID
 router.delete("/:id", deleteMenuData);
 
-export default router;
+module.exports = router;
