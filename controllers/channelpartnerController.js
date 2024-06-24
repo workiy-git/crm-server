@@ -5,6 +5,7 @@ const getChannelPartnerCollection = (req) => {
 };
 
 // Create new channel partner data
+// Updated createChannelPartnerData function without ID in the response
 const createChannelPartnerData = async (req, res) => {
     try {
         const channelPartnerData = {
@@ -15,11 +16,9 @@ const createChannelPartnerData = async (req, res) => {
         const result = await collection.insertOne(channelPartnerData);
 
         if (result.acknowledged) {
-            // For insertOne, use insertedId to get the ID of the inserted document
-            const insertedDocument = await collection.findOne({ _id: result.insertedId });
             res.status(201).json({
                 status: "success",
-                data: insertedDocument,
+                message: "Channel partner data created successfully",
             });
         } else {
             res.status(400).json({
@@ -34,4 +33,29 @@ const createChannelPartnerData = async (req, res) => {
         });
     }
 };
-module.exports = { createChannelPartnerData };
+
+// New function to read all channel partner data
+const readAllChannelPartnerData = async (req, res) => {
+    try {
+        const collection = getChannelPartnerCollection(req);
+        const channelPartnerData = await collection.find({}).toArray();
+
+        if (channelPartnerData.length > 0) {
+            res.status(200).json({
+                status: "success",
+                data: channelPartnerData,
+            });
+        } else {
+            res.status(404).json({
+                status: "fail",
+                message: "No channel partner data found",
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred while reading channel partner data",
+        });
+    }
+};
+module.exports = { createChannelPartnerData, readAllChannelPartnerData };
