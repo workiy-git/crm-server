@@ -6,6 +6,7 @@ const pagesRouter = require("./pagesRouter.js");
 const userRouter = require("./usersRouter.js");
 const appdataRouter = require("./appdataRouter.js");
 const channelpartnerRouter = require("./channelpartnerRoutes.js");
+const dashboardRouter = require("./appDashboardsRouter.js");
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use("/webforms", webformsRouter);
 router.use("/users", userRouter);
 router.use("/appdata", appdataRouter);
 router.use("/channelpartner", channelpartnerRouter);
+router.use("/dashboards", dashboardRouter);
 
 module.exports = router;
