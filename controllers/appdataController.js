@@ -23,7 +23,7 @@ const getAllAppData = async (req, res) => {
 };
 
 // Function to get app data based on filter criteria
-const getAppDataBasedOnFilter = async (req, res) => {
+const getAppDataBasedOnFilter_old = async (req, res) => {
   console.log("Fetching app data based on filter");
   // Check if req.body exists
   if (!req.body) {
@@ -69,6 +69,43 @@ const getAppDataBasedOnFilter = async (req, res) => {
         // Add any additional aggregation stages here
       ])
       .toArray();
+    // Send the filtered data as response
+    res.status(200).json({
+      status: "success",
+      data: filteredData,
+    });
+  } catch (error) {
+    // Send error response
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
+// Function to get app data based on filter criteria
+const getAppDataBasedOnFilter = async (req, res) => {
+  console.log("Fetching app data based on filter");
+  // Check if req.body exists
+  if (!req.body) {
+    // Handle the absence of req.body
+    // For example, send a 400 Bad Request response
+    res.status(400).json({
+      status: "fail",
+      message: "No data provided in the request body.",
+    });
+    return; // Stop execution of the function
+  }
+
+  try {
+    let filterCriteria = req.body;
+
+    console.log("filterCriteria");
+    console.log(filterCriteria);
+
+    const collection = await getAppDataCollection(req);
+    // Query the database with the filter criteria
+    const filteredData = await collection.aggregate(filterCriteria).toArray();
     // Send the filtered data as response
     res.status(200).json({
       status: "success",
