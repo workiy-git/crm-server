@@ -1,3 +1,4 @@
+const { ObjectId } = require("mongodb"); // Import ObjectId
 const config = require("../config/config.js");
 
 const getAppDataCollection = (req) => {
@@ -187,18 +188,24 @@ const updateAppDataByKey = async (req, res) => {
   try {
     const collection = await getAppDataCollection(req);
     const keyValue = req.params.key;
-    const updateData = req.body.appdata;
+    const updateData = req.body;
 
-    const updateResult = await collection.updateOne(
-      { [`appdata.${keyValue}`]: { $exists: true } },
-      { $set: { [`appdata.${keyValue}`]: updateData } }
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+    const result = await collection.updateOne(
+      { _id: objectId },
+      { $set: updateData }
     );
 
-    if (updateResult.matchedCount === 0) {
-      res.status(404).json({
-        status: "not found",
-        message: "App data not found with the given key",
-      });
+    // const updateResult = await collection.updateOne(
+    //   { [`appdata.${keyValue}`]: { $exists: true } },
+    //   { $set: { [`appdata.${keyValue}`]: updateData } }
+    // );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
     } else {
       res.status(200).json({
         status: "success",
