@@ -7,6 +7,7 @@ const userRouter = require("./usersRouter.js");
 const appdataRouter = require("./appdataRouter.js");
 const channelpartnerRouter = require("./channelpartnerRoutes.js");
 const dashboardRouter = require("./appDashboardsRouter.js");
+const controlsRouter = require("./controlsRouter.js");
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use("/users", userRouter);
 router.use("/appdata", appdataRouter);
 router.use("/channelpartner", channelpartnerRouter);
 router.use("/dashboards", dashboardRouter);
+router.use("/controls", controlsRouter);
 
 module.exports = router;

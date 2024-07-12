@@ -10,6 +10,7 @@ const config = {
   appdataCollectionName: "appdata",
   channelPartnerCollectionName: "channelPartner", // Add your collection name here
   dashboardsCollectionName: "dashboards", // Add your collection name here
+  controlsCollectionName: "controls",
 };
 
 module.exports = config;

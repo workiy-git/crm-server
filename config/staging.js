@@ -9,6 +9,7 @@ const config = {
   usersCollectionName: "users",
   appdataCollectionName: "appdata",
   dashboardsCollectionName: "dashboards", // Add your collection name here
+  controlsCollectionName: "controls",
 };
 
 module.exports = config;

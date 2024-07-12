@@ -1,0 +1,64 @@
+{
+  "control_name": "call_Filter",
+  "control_type": "dropdown",
+  "value": [
+    {
+      "name": "All Calls",
+      "filter": {}
+    },
+    {
+      "name": "Answered Calls",
+      "filter": {
+        "call_status": "Answered"
+      }
+    },
+    {
+      "name": "Missed Calls",
+      "filter": {
+        "call_status": "Missed"
+      }
+    },
+    {
+      "name": "Inbound Calls",
+      "filter": {
+        "call_direction": "Inbound"
+      }
+    },
+    {
+      "name": "Outbound Calls",
+      "filter": {
+        "call_direction": "Outbound"
+      }
+    },
+    {
+      "name": "Converted Calls",
+      "filter": {
+        "convert_status": "Converted"
+      }
+    },
+    {
+      "name": "Unconverted Calls",
+      "filter": {
+        "convert_status": "Unconverted"
+      }
+    },
+    {
+      "name": "Calls by Alpha Corp",
+      "filter": {
+        "source_company": "Alpha Corp"
+      }
+    },
+    {
+      "name": "Calls from Web",
+      "filter": {
+        "call_source": "web"
+      }
+    },
+    {
+      "name": "Calls to Hari",
+      "filter": {
+        "assigned_to": "Hari"
+      }
+    }
+  ]
+}
