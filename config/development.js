@@ -11,6 +11,8 @@ const config = {
   channelPartnerCollectionName: "channelPartner", // Add your collection name here
   dashboardsCollectionName: "dashboards", // Add your collection name here
   controlsCollectionName: "controls",
+  mappingsCollectionName: "mappings",
+  batchFlagsCollectionName: "batchFlags",
 };
 
 module.exports = config;

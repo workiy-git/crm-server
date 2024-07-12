@@ -10,6 +10,7 @@ const config = {
   appdataCollectionName: "appdata",
   dashboardsCollectionName: "dashboards", // Add your collection name here
   controlsCollectionName: "controls",
+  mappingsCollectionName: "mappings",
 };
 
 module.exports = config;
