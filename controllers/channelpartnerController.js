@@ -152,12 +152,9 @@ async function createappDataFromChannelPartnerData(
   try {
     console.log("channelPartnerData");
     const sourceJSON = channelPartnerData;
-    console.log("sourceJSON");
-    console.log(sourceJSON);
 
     // Mapping JSON
     let mappingJSON = {};
-    console.log("mappingJSON");
     const mappingData = await mappingsCollection
       .find({ mapping_source: "channelPartner" })
       .toArray();
@@ -166,25 +163,31 @@ async function createappDataFromChannelPartnerData(
     } else {
       console.log("No mapping data found for channelPartner");
     }
-    console.log("mappingJSON");
-    console.log(mappingJSON);
+
     // Destination JSON (initially empty or with some default values)
     let destinationJSON = {};
 
     // Update process
     for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
-      if (newKey === "_id") continue; // Skip adding _id to destinationJSON
+      const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+      if (skipKeys.includes(newKey)) continue; // Skip _id, mapping_source, mapping
+      //if (newKey === "_id") continue; // Skip adding _id to destinationJSON
 
       if (sourceJSON.hasOwnProperty(oldKey)) {
         // Special case for dynamic values like new Date()
-        if (newKey === "created_time") {
+
+        destinationJSON[newKey] = sourceJSON[oldKey];
+      } else {
+        if (newKey === "pageName") {
+          // Use the value from mappingJSON for pageName
+          console.log(newKey, oldKey);
+          destinationJSON[newKey] = oldKey;
+        } else if (newKey === "created_time") {
           destinationJSON[newKey] = new Date();
         } else {
-          destinationJSON[newKey] = sourceJSON[oldKey];
+          destinationJSON[newKey] = "";
         }
-      } else {
         // If oldKey is not available in sourceJSON, add newKey with an empty string
-        destinationJSON[newKey] = "";
       }
     }
     // console.log("destinationJSON");
@@ -202,8 +205,7 @@ async function createappDataFromChannelPartnerData(
     //   console.log("Error:", error);
     // }
     const resultappData = await appDataCollection.insertOne(destinationJSON);
-    console.log("resultappData");
-    console.log(resultappData);
+
     if (resultappData.acknowledged) {
       return true;
     } else {
