@@ -126,15 +126,11 @@ const createAppData = async (req, res) => {
   console.log("Creating new app data");
   try {
     const collection = await getAppDataCollection(req);
-    const newData = req.body.appdata;
-    const key = newData.key; // Assuming each piece of app data has a unique key
+    const newData = req.body;
 
-    const updateResult = await collection.updateOne(
-      {},
-      { $set: { [`appdata.${key}`]: newData } }
-    );
+    const insertResult = await collection.insertOne(newData);
 
-    if (updateResult.modifiedCount > 0) {
+    if (insertResult.acknowledged === true) {
       res.status(201).json({
         status: "success",
         data: newData,
