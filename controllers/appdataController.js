@@ -159,14 +159,18 @@ const getAppDataByKey = async (req, res) => {
   try {
     const collection = await getAppDataCollection(req);
     const keyValue = String(req.params.key);
-    const data = await collection.findOne({
-      [`appdata.${keyValue}`]: { $exists: true },
-    });
+    // const data = await collection.findOne({
+    //   [`appdata.${keyValue}`]: { $exists: true },
+    // });
+
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+    const data = await collection.findOne({ _id: objectId });
 
     if (data) {
       res.status(200).json({
         status: "success",
-        data: data.appdata[keyValue],
+        data: data,
       });
     } else {
       res.status(404).json({
@@ -227,12 +231,11 @@ const deleteAppDataByKey = async (req, res) => {
     const collection = await getAppDataCollection(req);
     const keyValue = req.params.key;
 
-    const updateResult = await collection.updateOne(
-      { [`appdata.${keyValue}`]: { $exists: true } },
-      { $unset: { [`appdata.${keyValue}`]: "" } }
-    );
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+    const data = await collection.deleteOne({ _id: objectId });
 
-    if (updateResult.modifiedCount === 0) {
+    if (data.deletedCount === 0) {
       res.status(404).json({
         status: "not found",
         message: "App data not found with the given key",
