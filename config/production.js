@@ -8,9 +8,12 @@ const config = {
   webFormCollectionName: "webforms", // Add your collection name here
   usersCollectionName: "users",
   appdataCollectionName: "appdata",
+  channelPartnerCollectionName: "channelPartner", // Add your collection name here
   dashboardsCollectionName: "dashboards", // Add your collection name here
   controlsCollectionName: "controls",
   mappingsCollectionName: "mappings",
+  mappingSummaryCollectionName: "mappingSummary",
+  batchFlagsCollectionName: "batchFlags",
 };
 
 module.exports = config;

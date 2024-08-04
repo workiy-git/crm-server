@@ -4,6 +4,44 @@ const getControlsCollection = (req) => {
   return req.db.collection(config.controlsCollectionName);
 };
 
+// Function to get controls based on filter criteria
+const getControlsByFilter = async (req, res) => {
+  console.log("Fetching controls data based on filter");
+
+  // Check if req.body exists
+  if (!req.body) {
+    // Handle the absence of req.body
+    // For example, send a 400 Bad Request response
+    res.status(400).json({
+      status: "fail",
+      message: "No data provided in the request body.",
+    });
+    return; // Stop execution of the function
+  }
+
+  try {
+    let filterCriteria = req.body;
+
+    console.log("filterCriteria");
+    console.log(filterCriteria);
+
+    const collection = await getControlsCollection(req);
+    // Query the database with the filter criteria
+    const filteredData = await collection.find(filterCriteria).toArray();
+    // Send the filtered data as response
+    res.status(200).json({
+      status: "success",
+      data: filteredData,
+    });
+  } catch (error) {
+    // Send error response
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
 // Read all controls data
 const getAllControls = async (req, res) => {
   console.log("Fetching all controls data");
@@ -97,4 +135,5 @@ module.exports = {
   addControl,
   updateControl,
   deleteControl,
+  getControlsByFilter,
 };

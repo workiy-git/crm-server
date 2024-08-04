@@ -4,12 +4,15 @@ const {
   addControl,
   updateControl,
   deleteControl,
+  getControlsByFilter,
 } = require("../controllers/controlsController.js");
 
 const router = express.Router();
 
 // Route to get all controls data
 router.get("/", getAllControls);
+
+router.post("/retrive", getControlsByFilter);
 
 // Route to add a new control
 router.post("/", addControl);
