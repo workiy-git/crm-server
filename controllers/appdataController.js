@@ -128,6 +128,15 @@ const createAppData = async (req, res) => {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
 
+    // Add history entry
+    newData.history = [
+      {
+        created_at: new Date(),
+        created_by: req.created_by || "", // Check if value is available, otherwise use empty string
+        created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
+      },
+    ];
+
     const insertResult = await collection.insertOne(newData);
 
     if (insertResult.acknowledged === true) {
@@ -192,9 +201,37 @@ const updateAppDataByKey = async (req, res) => {
 
     // Convert string key to ObjectId
     const objectId = new ObjectId(keyValue);
+
+    // Fetch the original document
+    const originalDoc = await collection.findOne({ _id: objectId });
+    if (!originalDoc) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    }
+
+    // Determine the changed keys
+    const changedKeys = Object.keys(updateData).filter(
+      (key) => originalDoc[key] !== updateData[key]
+    );
+
+    // Create history entry
+    const historyEntry = {
+      updated_at: new Date(),
+      updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
+      updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
+      changes: changedKeys.reduce((acc, key) => {
+        acc[key] = { old: originalDoc[key], new: updateData[key] };
+        return acc;
+      }, {}),
+    };
+
     const result = await collection.updateOne(
       { _id: objectId },
-      { $set: updateData }
+      {
+        $set: updateData,
+        $push: { history: { $each: [historyEntry], $position: 0 } }, // Append on top
+      }
     );
 
     // const updateResult = await collection.updateOne(
