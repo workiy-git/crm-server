@@ -226,12 +226,32 @@ const updateAppDataByKey = async (req, res) => {
       }, {}),
     };
 
+    // Create comments entry if comments are provided
+    const commentsEntry = req.body.comments
+      ? {
+          updated_at: new Date(),
+          updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
+          updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
+          comments: req.body.comments,
+        }
+      : null;
+
     const result = await collection.updateOne(
       { _id: objectId },
       {
         $set: updateData,
-        $push: { history: { $each: [historyEntry], $position: 0 } }, // Append on top
+        $push: { comments: { $each: [commentsEntry], $position: 0 } }, // Append on top
       }
+    );
+
+    // Append comments entry if it exists
+    if (commentsEntry) {
+      updateOperations.$push.history.$each.push(commentsEntry);
+    }
+
+    const resultwithComment = await collection.updateOne(
+      { _id: objectId },
+      updateOperations
     );
 
     // const updateResult = await collection.updateOne(
@@ -249,6 +269,185 @@ const updateAppDataByKey = async (req, res) => {
         data: updateData,
       });
     }
+  } catch (error) {
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
+// // Update app data by key
+// const updateAppDataCommentsByKey = async (req, res) => {
+//   console.log(`Updating app data with key: ${req.params.key}`);
+//   try {
+//     const collection = await getAppDataCollection(req);
+//     const keyValue = req.params.key;
+//     const updateData = req.body;
+
+//     // Convert string key to ObjectId
+//     const objectId = new ObjectId(keyValue);
+
+//     // Create comments entry if comments are provided
+//     const commentsEntry = req.body.comments
+//       ? {
+//           updated_at: new Date(),
+//           updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
+//           updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
+//           comments: req.body.comments,
+//         }
+//       : null;
+
+//     const result = await collection.updateOne(
+//       { _id: objectId },
+//       {
+//         $set: updateData,
+//         $push: { comments: { $each: [commentsEntry], $position: 0 } }, // Append on top
+//       }
+//     );
+
+//     if (result.modifiedCount === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "No document found with the specified key" });
+//     } else {
+//       res.status(200).json({
+//         status: "success",
+//         data: updateData,
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       status: "failure",
+//       message: error.message,
+//     });
+//   }
+// };
+
+const updateCommentsByKey = async (req, res) => {
+  console.log(`Updating comments for app data with key: ${req.params.key}`);
+  try {
+    const collection = await getAppDataCollection(req);
+    const keyValue = req.params.key;
+
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+
+    // Fetch the original document
+    const originalDoc = await collection.findOne({ _id: objectId });
+    if (!originalDoc) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    }
+
+    // Extract comments entry from the request body
+    const commentsData = req.body.comments;
+    if (!commentsData || !commentsData.comments) {
+      return res.status(400).json({ message: "No comments provided" });
+    }
+
+    const commentsEntry = {
+      updated_at: new Date(),
+      updated_by: commentsData.updated_by || "", // Check if user ID is available, otherwise use empty string
+      updated_by_id: commentsData.updated_by_id || "", // Check if user ID is available, otherwise use empty string
+      comments: commentsData.comments,
+    };
+
+    const updateOperations = {
+      $push: { comments: { $each: [commentsEntry], $position: 0 } }, // Append on top
+    };
+
+    const result = await collection.updateOne(
+      { _id: objectId },
+      updateOperations
+    );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    } else {
+      res.status(200).json({
+        status: "success",
+        data: commentsEntry,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
+const retrieveCommentsByKey = async (req, res) => {
+  console.log(`Retrieving comments for app data with key: ${req.params.key}`);
+  try {
+    const collection = await getAppDataCollection(req);
+    const keyValue = req.params.key;
+
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+
+    // Fetch the document
+    const document = await collection.findOne({ _id: objectId });
+    if (!document) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    }
+
+    // Extract comments from the document
+    const comments = document.comments || [];
+
+    res.status(200).json({
+      status: "success",
+      data: comments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
+const retrieveHistoryByKey = async (req, res) => {
+  console.log(`Retrieving history for app data with key: ${req.params.key}`);
+  try {
+    const collection = await getAppDataCollection(req);
+    const keyValue = req.params.key;
+
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+
+    // Fetch the document
+    const document = await collection.findOne({ _id: objectId });
+    if (!document) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    }
+
+    // Extract history from the document
+    const history = document.history || [];
+    const formattedHistory = history.map((entry) => {
+      const changes = Object.entries(entry.changes)
+        .map(([key, value]) => {
+          return `${key}: changed from "${value.old}" to "${value.new}"`;
+        })
+        .join(", ");
+
+      return `On ${new Date(entry.updated_at).toLocaleString()}, ${
+        entry.updated_by
+      } (ID: ${entry.updated_by_id}) made the following changes: ${changes}.`;
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: formattedHistory,
+    });
   } catch (error) {
     res.status(500).json({
       status: "failure",
@@ -294,4 +493,7 @@ module.exports = {
   updateAppDataByKey,
   deleteAppDataByKey,
   getAppDataBasedOnFilter,
+  updateCommentsByKey,
+  retrieveCommentsByKey,
+  retrieveHistoryByKey,
 };
