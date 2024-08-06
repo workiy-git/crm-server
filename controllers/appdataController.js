@@ -226,38 +226,13 @@ const updateAppDataByKey = async (req, res) => {
       }, {}),
     };
 
-    // Create comments entry if comments are provided
-    const commentsEntry = req.body.comments
-      ? {
-          updated_at: new Date(),
-          updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
-          updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
-          comments: req.body.comments,
-        }
-      : null;
-
     const result = await collection.updateOne(
       { _id: objectId },
       {
         $set: updateData,
-        $push: { comments: { $each: [commentsEntry], $position: 0 } }, // Append on top
+        $push: { history: { $each: [historyEntry], $position: 0 } }, // Append on top
       }
     );
-
-    // Append comments entry if it exists
-    if (commentsEntry) {
-      updateOperations.$push.history.$each.push(commentsEntry);
-    }
-
-    const resultwithComment = await collection.updateOne(
-      { _id: objectId },
-      updateOperations
-    );
-
-    // const updateResult = await collection.updateOne(
-    //   { [`appdata.${keyValue}`]: { $exists: true } },
-    //   { $set: { [`appdata.${keyValue}`]: updateData } }
-    // );
 
     if (result.modifiedCount === 0) {
       return res
