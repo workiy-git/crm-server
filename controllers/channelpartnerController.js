@@ -156,7 +156,7 @@ async function createappDataFromChannelPartnerData(
     // Mapping JSON
     let mappingJSON = {};
     const mappingData = await mappingsCollection
-      .find({ mapping_source: "channelPartner" })
+      .find({ mapping_source: "channelPartner, pageName" })
       .toArray();
     if (mappingData.length > 0) {
       mappingJSON = mappingData[0];
@@ -213,6 +213,72 @@ async function createappDataFromChannelPartnerData(
     }
 
     return true;
+  } catch (error) {
+    console.error("Error:", error);
+    return false; // Indicate failure
+  }
+}
+
+async function createOrUpdateAppDataFromChannelPartnerData(
+  channelPartnerData,
+  mappingsCollection,
+  appDataCollection
+) {
+  try {
+    console.log("channelPartnerData");
+    const sourceJSON = channelPartnerData;
+
+    // Mapping JSON
+    let mappingJSON = {};
+    const mappingData = await mappingsCollection
+      .find({ mapping_source: "channelPartner, pageName" })
+      .toArray();
+    if (mappingData.length > 0) {
+      mappingJSON = mappingData[0];
+    } else {
+      console.log("No mapping data found for channelPartner");
+    }
+
+    // Destination JSON (initially empty or with some default values)
+    let destinationJSON = {};
+
+    // Update process
+    for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
+      const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+      if (skipKeys.includes(newKey)) continue;
+
+      if (sourceJSON.hasOwnProperty(oldKey)) {
+        destinationJSON[newKey] = sourceJSON[oldKey];
+      } else {
+        if (newKey === "pageName") {
+          console.log(newKey, oldKey);
+          destinationJSON[newKey] = oldKey;
+        } else if (newKey === "created_time") {
+          destinationJSON[newKey] = new Date();
+        } else {
+          destinationJSON[newKey] = "";
+        }
+      }
+    }
+
+    // Check if mobile_phone exists in appDataCollection with pageName="leads"
+    const existingData = await appDataCollection.findOne({
+      mobile_phone: destinationJSON.mobile_phone,
+      pageName: "leads"
+    });
+
+    if (existingData) {
+      // Update re_engaged to true
+      const updateResult = await appDataCollection.updateOne(
+        { _id: existingData._id },
+        { $set: { re_engaged: true } }
+      );
+      return updateResult.modifiedCount > 0;
+    } else {
+      // Insert new data
+      const resultappData = await appDataCollection.insertOne(destinationJSON);
+      return resultappData.acknowledged;
+    }
   } catch (error) {
     console.error("Error:", error);
     return false; // Indicate failure
