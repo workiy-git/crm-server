@@ -234,6 +234,7 @@ async function createOrUpdateAppDataFromChannelPartnerData(
   try {
     console.log("channelPartnerData");
     const sourceJSON = channelPartnerData;
+    console.log(sourceJSON);
 
     // Mapping JSON
     let mappingJSON = {};
@@ -248,17 +249,20 @@ async function createOrUpdateAppDataFromChannelPartnerData(
 
     for (const mappingJSON of mappingJSONCollection) {
       // Destination JSON (initially empty or with some default values)
-
+      
       // if(mappingJSON.filter === "no duplicates")
       // Check if mobile_phone exists in appDataCollection with pageName="leads"
-      // Check if mobile_phone exists in appDataCollection with pageName="leads"
-      const existingData = await appDataCollection.findOne({
-        mobile_phone: destinationJSON.mobile_phone,
+      console.log('Querying with:', {
+        mobile_phone: sourceJSON.phone,
         pageName: mappingJSON.pageName,
       });
-      if (existingData && mappingJSON.filter === "no duplicates") {
-        //skip;
-      } else {
+      const existingData = await appDataCollection.findOne({
+        mobile_phone: sourceJSON.phone,
+      });
+      // console.log(mappingJSON.filter);
+      // console.log(existingData);
+      if (existingData && mappingJSON.pageName === "enquiry") {
+        console.log(mappingJSON.pageName, "already exists");
         let destinationJSON = {};
 
         // Update process
@@ -269,7 +273,50 @@ async function createOrUpdateAppDataFromChannelPartnerData(
           if (sourceJSON.hasOwnProperty(oldKey)) {
             destinationJSON[newKey] = sourceJSON[oldKey];
           } else {
-            if (newKey === "pageName") {
+            if (newKey === mappingJSON.pageName) {
+              console.log(newKey, oldKey);
+              destinationJSON[newKey] = oldKey;
+            } else if (newKey === "created_time") {
+              destinationJSON[newKey] = new Date();
+            } else {
+              destinationJSON[newKey] = "";
+            }
+          }
+        }
+
+        // // Check if mobile_phone exists in appDataCollection with pageName="leads"
+        // const existingData = await appDataCollection.findOne({
+        //   mobile_phone: destinationJSON.mobile_phone,
+        //   pageName: "leads",
+        // });
+
+        // if (existingData) {
+        //   // Update re_engaged to true
+        //   const updateResult = await appDataCollection.updateOne(
+        //     { _id: existingData._id },
+        //     { $set: { re_engaged: true } }
+        //   );
+        //   return updateResult.modifiedCount > 0;
+        // } else {
+        // Insert new data
+        const resultappData = await appDataCollection.insertOne(
+          destinationJSON
+        );
+        return resultappData.acknowledged;
+      } else if (mappingJSON.pageName === "leads") {
+        console.log(mappingJSON.pageName, "new lead");
+        let destinationJSON = {};
+
+        // Update process
+        for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
+          const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+          if (skipKeys.includes(newKey)) continue;
+
+          if (sourceJSON.hasOwnProperty(oldKey)) {
+            destinationJSON[newKey] = sourceJSON[oldKey];
+          } else {
+            console.log(mappingJSON.pageName);
+            if (newKey === mappingJSON.pageName) {
               console.log(newKey, oldKey);
               destinationJSON[newKey] = oldKey;
             } else if (newKey === "created_time") {
