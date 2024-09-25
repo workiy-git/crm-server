@@ -217,7 +217,7 @@ const updateAppDataByKey = async (req, res) => {
 
     // Create history entry
     const historyEntry = {
-      updated_at: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      updated_at: new Date(),
       updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
       updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
       changes: changedKeys.reduce((acc, key) => {
@@ -323,7 +323,7 @@ const updateCommentsByKey = async (req, res) => {
     }
 
     const commentsEntry = {
-      updated_at: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+      updated_at: new Date(),
       updated_by: commentsData.updated_by || "", // Check if user ID is available, otherwise use empty string
       updated_by_id: commentsData.updated_by_id || "", // Check if user ID is available, otherwise use empty string
       comments: commentsData.comments,

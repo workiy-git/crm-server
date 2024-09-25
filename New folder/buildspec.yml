@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - echo Installing source dependencies...
+      - npm install
+  pre_build:
+    commands:
+      - echo Pre-build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Node.js code...
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - zip -r lambda.zip .
+artifacts:
+  files:
+    - lambda.zip
+    - appspec.yml
+  discard-paths: yes
+  name: lambda-artifact
+  base-directory: ./
+  bucket-name: crm-api-server-deploy

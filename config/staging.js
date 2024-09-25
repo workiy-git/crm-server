@@ -14,6 +14,7 @@ const config = {
   mappingsCollectionName: "mappings",
   mappingSummaryCollectionName: "mappingSummary",
   batchFlagsCollectionName: "batchFlags",
+  hollowCollectionName: "hollow",
 };
 
 module.exports = config;

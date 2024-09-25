@@ -226,6 +226,145 @@ async function createappDataFromChannelPartnerData(
   }
 }
 
+// async function createOrUpdateAppDataFromChannelPartnerData(
+//   channelPartnerData,
+//   mappingsCollection,
+//   appDataCollection
+// ) {
+//   try {
+//     console.log("channelPartnerData");
+//     const sourceJSON = channelPartnerData;
+//     console.log(sourceJSON);
+
+//     // Mapping JSON
+//     let mappingJSON = {};
+//     const mappingData = await mappingsCollection
+//       .find({ mapping_source: "channelPartner" })
+//       .toArray();
+//     if (mappingData.length > 0) {
+//       mappingJSONCollection = mappingData;
+//     } else {
+//       console.log("No mapping data found for channelPartner");
+//     }
+
+//     for (const mappingJSON of mappingJSONCollection) {
+//       // Destination JSON (initially empty or with some default values)
+      
+//       // if(mappingJSON.filter === "no duplicates")
+//       // Check if mobile_phone exists in appDataCollection with pageName="leads"
+//       // console.log('Querying with:', {
+//       //   mobile_phone: sourceJSON.phone,
+//       //   pageName: mappingJSON.pageName,
+//       // });
+//       const existingData = await appDataCollection.findOne({
+//         mobile_phone: sourceJSON.phone,
+//       });
+//       // console.log(mappingJSON.filter);
+//       // console.log(existingData);
+//       if (existingData && mappingJSON.filter === "duplicate") {
+//         console.log(mappingJSON.pageName, mappingJSON.filter, " - Lead already exists");
+//         let destinationJSON = {};
+
+//         // Update process
+//         for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
+//           // console.log("Keys in mappingJSON:", Object.keys(mappingJSON));
+//           const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+//           if (skipKeys.includes(newKey)) continue;
+
+//           if (sourceJSON.hasOwnProperty(oldKey)) {
+//             destinationJSON[newKey] = sourceJSON[oldKey];
+//           } else {
+//             if (newKey === "pageName") {
+//               console.log("Assigning pageName:", mappingJSON.pageName);
+//               destinationJSON[newKey] = oldKey;
+//             } else if (newKey === "created_time") {
+//               destinationJSON[newKey] = new Date();
+//             } else {
+//               destinationJSON[newKey] = "";
+//             }
+//           }
+//         }
+
+//         // // Check if mobile_phone exists in appDataCollection with pageName="leads"
+//         // const existingData = await appDataCollection.findOne({
+//         //   mobile_phone: destinationJSON.mobile_phone,
+//         //   pageName: "leads",
+//         // });
+
+//         // if (existingData) {
+//         //   // Update re_engaged to true
+//         //   const updateResult = await appDataCollection.updateOne(
+//         //     { _id: existingData._id },
+//         //     { $set: { re_engaged: true } }
+//         //   );
+//         //   return updateResult.modifiedCount > 0;
+//         // } else {
+
+//         // Update re_engaged to "Yes" for the existing lead with pageName="leads"
+//         const updateResult = await appDataCollection.updateOne(
+//           { _id: existingData._id },
+//           { $set: { re_engaged: "Yes" } }
+//         );
+
+//         // Insert new data
+//         const resultappData = await appDataCollection.insertOne(
+//           destinationJSON
+//         );
+//         console.log(destinationJSON);
+//         return resultappData.acknowledged;
+//       } else if (mappingJSON.filter === "no duplicates") {
+//         console.log(mappingJSON.pageName, mappingJSON.filter, " - New lead");
+//         let destinationJSON = {};
+
+//         // Update process
+//         for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
+//           const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+//           if (skipKeys.includes(newKey)) continue;
+
+//           if (sourceJSON.hasOwnProperty(oldKey)) {
+//             destinationJSON[newKey] = sourceJSON[oldKey];
+//           } else {
+//             console.log(mappingJSON.pageName);
+//             if (newKey === "pageName") {
+//               console.log("Assigning pageName:", mappingJSON.pageName);
+//               destinationJSON["pageName"] = mappingJSON.pageName;
+//             } else if (newKey === "created_time") {
+//               destinationJSON[newKey] = new Date();
+//             } else {
+//               destinationJSON[newKey] = "";
+//             }
+//           }
+//         }
+
+//         // // Check if mobile_phone exists in appDataCollection with pageName="leads"
+//         // const existingData = await appDataCollection.findOne({
+//         //   mobile_phone: destinationJSON.mobile_phone,
+//         //   pageName: "leads",
+//         // });
+
+//         // if (existingData) {
+//         //   // Update re_engaged to true
+//         //   const updateResult = await appDataCollection.updateOne(
+//         //     { _id: existingData._id },
+//         //     { $set: { re_engaged: true } }
+//         //   );
+//         //   return updateResult.modifiedCount > 0;
+//         // } else {
+//         // Insert new data
+//         const resultappData = await appDataCollection.insertOne(
+//           destinationJSON
+//         );
+//         console.log(destinationJSON);
+//         return resultappData.acknowledged;
+//       }
+//     }
+//     return true;
+//   } catch (error) {
+//     console.error("Error:", error);
+//     return false; // Indicate failure
+//   }
+// }
+
 async function createOrUpdateAppDataFromChannelPartnerData(
   channelPartnerData,
   mappingsCollection,
@@ -237,7 +376,7 @@ async function createOrUpdateAppDataFromChannelPartnerData(
     console.log(sourceJSON);
 
     // Mapping JSON
-    let mappingJSON = {};
+    let mappingJSONCollection = [];
     const mappingData = await mappingsCollection
       .find({ mapping_source: "channelPartner" })
       .toArray();
@@ -248,24 +387,36 @@ async function createOrUpdateAppDataFromChannelPartnerData(
     }
 
     for (const mappingJSON of mappingJSONCollection) {
-      // Destination JSON (initially empty or with some default values)
-      
-      // if(mappingJSON.filter === "no duplicates")
-      // Check if mobile_phone exists in appDataCollection with pageName="leads"
-      // console.log('Querying with:', {
-      //   mobile_phone: sourceJSON.phone,
-      //   pageName: mappingJSON.pageName,
-      // });
+      // Check if mobile_phone exists in appDataCollection
       const existingData = await appDataCollection.findOne({
         mobile_phone: sourceJSON.phone,
       });
-      // console.log(mappingJSON.filter);
-      // console.log(existingData);
+
+      let destinationJSON = {};
+
+      // Update process
+      // for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
+      //   const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+      //   if (skipKeys.includes(newKey)) continue;
+
+      //   if (sourceJSON.hasOwnProperty(oldKey)) {
+      //     destinationJSON[newKey] = sourceJSON[oldKey];
+      //   } else {
+      //     if (newKey === "pageName") {
+      //       destinationJSON[newKey] = mappingJSON.pageName;
+      //     } else if (newKey === "created_time") {
+      //       destinationJSON[newKey] = new Date();
+      //     } else {
+      //       destinationJSON[newKey] = "";
+      //     }
+      //   }
+      // }
+
       if (existingData && mappingJSON.filter === "duplicate") {
         console.log(mappingJSON.pageName, mappingJSON.filter, " - Lead already exists");
         let destinationJSON = {};
 
-        // Update process
+        // Update process to enquiry for duplicate lead
         for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
           // console.log("Keys in mappingJSON:", Object.keys(mappingJSON));
           const skipKeys = ["_id", "mapping_source", "mapping_dest"];
@@ -279,11 +430,22 @@ async function createOrUpdateAppDataFromChannelPartnerData(
               destinationJSON[newKey] = oldKey;
             } else if (newKey === "created_time") {
               destinationJSON[newKey] = new Date();
+            } else if (newKey === "enquiry_status") {
+              destinationJSON[newKey] = "Duplicate";
             } else {
               destinationJSON[newKey] = "";
             }
           }
         }
+
+        // Fetch the last enquiry_id and increment it by 1
+        const lastEnquiry = await appDataCollection.find({ pageName: "enquiry" }).sort({ enquiry_id: -1 }).limit(1).toArray();
+            if (lastEnquiry.length > 0) {
+              const lastEnquiryId = lastEnquiry[0].enquiry_id;
+              const numericPart = parseInt(lastEnquiryId.slice(2)) + 1;
+              const newEnquiryId = "EN" + numericPart;
+              destinationJSON.enquiry_id = newEnquiryId;
+            }
 
         // // Check if mobile_phone exists in appDataCollection with pageName="leads"
         // const existingData = await appDataCollection.findOne({
@@ -314,20 +476,17 @@ async function createOrUpdateAppDataFromChannelPartnerData(
         return resultappData.acknowledged;
       } else if (mappingJSON.filter === "no duplicates") {
         console.log(mappingJSON.pageName, mappingJSON.filter, " - New lead");
-        let destinationJSON = {};
 
-        // Update process
+        // Update process to leads for new lead
         for (const [newKey, oldKey] of Object.entries(mappingJSON)) {
           const skipKeys = ["_id", "mapping_source", "mapping_dest"];
           if (skipKeys.includes(newKey)) continue;
-
+  
           if (sourceJSON.hasOwnProperty(oldKey)) {
             destinationJSON[newKey] = sourceJSON[oldKey];
           } else {
-            console.log(mappingJSON.pageName);
             if (newKey === "pageName") {
-              console.log("Assigning pageName:", mappingJSON.pageName);
-              destinationJSON["pageName"] = mappingJSON.pageName;
+              destinationJSON[newKey] = mappingJSON.pageName;
             } else if (newKey === "created_time") {
               destinationJSON[newKey] = new Date();
             } else {
@@ -336,25 +495,56 @@ async function createOrUpdateAppDataFromChannelPartnerData(
           }
         }
 
-        // // Check if mobile_phone exists in appDataCollection with pageName="leads"
-        // const existingData = await appDataCollection.findOne({
-        //   mobile_phone: destinationJSON.mobile_phone,
-        //   pageName: "leads",
-        // });
+        // Fetch the last lead_id and increment it by 1
+        const lastLead = await appDataCollection.find({ pageName: "leads" }).sort({ lead_id: -1 }).limit(1).toArray();
+          if (lastLead.length > 0) {
+            const lastLeadId = lastLead[0].lead_id;
+            const numericPart = parseInt(lastLeadId.slice(2)) + 1;
+            const newLeadId = "LD" + numericPart;
+            destinationJSON.lead_id = newLeadId;
+          }
 
-        // if (existingData) {
-        //   // Update re_engaged to true
-        //   const updateResult = await appDataCollection.updateOne(
-        //     { _id: existingData._id },
-        //     { $set: { re_engaged: true } }
-        //   );
-        //   return updateResult.modifiedCount > 0;
-        // } else {
-        // Insert new data
-        const resultappData = await appDataCollection.insertOne(
-          destinationJSON
-        );
+        // Insert new data for leads
+        const resultappData = await appDataCollection.insertOne(destinationJSON);
         console.log(destinationJSON);
+
+        // If the current mapping is for "leads", create another record for "enquiry"
+        if (mappingJSON.pageName === "leads") {
+          const enquiryMapping = mappingJSONCollection.find(m => m.pageName === "enquiry");
+          if (enquiryMapping) {
+            let enquiryJSON = {};
+            for (const [newKey, oldKey] of Object.entries(enquiryMapping)) {
+              const skipKeys = ["_id", "mapping_source", "mapping_dest"];
+              if (skipKeys.includes(newKey)) continue;
+
+              if (sourceJSON.hasOwnProperty(oldKey)) {
+                enquiryJSON[newKey] = sourceJSON[oldKey];
+              } else {
+                if (newKey === "pageName") {
+                  enquiryJSON[newKey] = enquiryMapping.pageName;
+                } else if (newKey === "created_time") {
+                  enquiryJSON[newKey] = new Date();
+                } else if (newKey === "enquiry_status") {
+                  enquiryJSON[newKey] = "New Lead";
+                } else {
+                  enquiryJSON[newKey] = "";
+                }
+              }
+            }
+
+            // Fetch the last enquiry_id and increment it by 1
+            const lastEnquiry = await appDataCollection.find({ pageName: "enquiry" }).sort({ enquiry_id: -1 }).limit(1).toArray();
+            if (lastEnquiry.length > 0) {
+              const lastEnquiryId = lastEnquiry[0].enquiry_id;
+              const numericPart = parseInt(lastEnquiryId.slice(2)) + 1;
+              const newEnquiryId = "EN" + numericPart;
+              enquiryJSON.enquiry_id = newEnquiryId;
+            }
+
+            const resultEnquiryData = await appDataCollection.insertOne(enquiryJSON);
+            console.log(enquiryJSON);
+          }
+        }
         return resultappData.acknowledged;
       }
     }
