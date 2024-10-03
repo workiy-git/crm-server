@@ -20,6 +20,9 @@ app.get("/api/info", (req, res) => {
   res.send({ application: "sample-app-app", version: "1" });
 });
 
+app.get("/", (req, res) => {
+  res.send({ application: "crm-workiy-app", version: "2" });
+});
 //app.listen(3000, () => console.log(`Listening on: 3000`));
 
 // export const handler = serverless(app);
