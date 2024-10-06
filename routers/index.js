@@ -8,17 +8,18 @@ const appdataRouter = require("./appdataRouter.js");
 const channelpartnerRouter = require("./channelpartnerRoutes.js");
 const dashboardRouter = require("./appDashboardsRouter.js");
 const controlsRouter = require("./controlsRouter.js");
+const authorizeRole = require("../middlewares/authorizeRole.js"); // Adjust the path as needed
 
 const router = express.Router();
 
 router.use("/login", loginRouter);
 router.use("/pages", pagesRouter);
 router.use("/menus", menuRouter);
-router.use("/webforms", webformsRouter);
-router.use("/users", userRouter);
-router.use("/appdata", appdataRouter);
-router.use("/channelpartner", channelpartnerRouter);
-router.use("/dashboards", dashboardRouter);
-router.use("/controls", controlsRouter);
+router.use("/webforms", authorizeRole("Admin, Lead"), webformsRouter);
+router.use("/users", authorizeRole("Admin, Lead"), userRouter);
+router.use("/appdata", authorizeRole("Admin, Lead"), appdataRouter);
+router.use("/channelpartner", authorizeRole("Admin"), channelpartnerRouter);
+router.use("/dashboards", authorizeRole("Admin, Lead"), dashboardRouter); // Example: Only Admins can access dashboards
+router.use("/controls", authorizeRole("Admin, Lead"), controlsRouter); // Example: Only Super_Admins can access controls
 
 module.exports = router;
