@@ -215,11 +215,15 @@ const updateAppDataByKey = async (req, res) => {
       (key) => originalDoc[key] !== updateData[key]
     );
 
+    // Get the user's time zone (you need to pass it from the frontend)
+    const userTimeZone = req.body.timeZone || 'UTC'; // Default to UTC if not provided
+
     // Create history entry
     const historyEntry = {
-      updated_at: new Date(),
+      updated_at: new Date(),  // UTC timestamp
       updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
       updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
+      updated_by_time_zone: userTimeZone, // Store user's time zone
       changes: changedKeys.reduce((acc, key) => {
         acc[key] = { old: originalDoc[key], new: updateData[key] };
         return acc;
@@ -251,6 +255,7 @@ const updateAppDataByKey = async (req, res) => {
     });
   }
 };
+
 
 // // Update app data by key
 // const updateAppDataCommentsByKey = async (req, res) => {
