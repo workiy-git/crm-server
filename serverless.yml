@@ -7,7 +7,7 @@ provider:
   memorySize: 128
 functions:
   app:
-    handler: server.handler
+    handler: app.handler
     events: 
       - http: 
           path: /
