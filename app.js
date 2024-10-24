@@ -12,6 +12,12 @@ app.use(cors());
 
 app.use(express.json());
 
+// Middleware to normalize the path
+app.use((req, res, next) => {
+  req.url = req.url.replace(/\/+/g, '/');
+  next();
+});
+
 // Connect to MongoDB
 app.use(connectToDatabase);
 app.use("/api", routes);
