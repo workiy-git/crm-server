@@ -122,35 +122,91 @@ const getAppDataBasedOnFilter = async (req, res) => {
 };
 
 // Create new app data
+// const createAppData = async (req, res) => {
+//   console.log("Creating new app data");
+//   try {
+//     const collection = await getAppDataCollection(req);
+//     const newData = req.body;
+
+//     // // Add history entry
+//     // newData.history = [
+//     //   {
+//     //     created_at: new Date(),
+//     //     created_by: req.created_by || "", // Check if value is available, otherwise use empty string
+//     //     created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
+//     //   },
+//     // ];
+
+//     const insertResult = await collection.insertOne(newData);
+
+//     if (insertResult.acknowledged === true) {
+//       res.status(201).json({
+//         status: "success",
+//         data: newData,
+//       });
+//     } else {
+//       res.status(500).json({
+//         status: "failure",
+//         message: "Failed to create new app data",
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       status: "failure",
+//       message: error.message,
+//     });
+//   }
+// };
 const createAppData = async (req, res) => {
   console.log("Creating new app data");
   try {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
 
-    // // Add history entry
-    // newData.history = [
-    //   {
-    //     created_at: new Date(),
-    //     created_by: req.created_by || "", // Check if value is available, otherwise use empty string
-    //     created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
-    //   },
-    // ];
+    console.log("New data to be inserted:", newData);
 
     const insertResult = await collection.insertOne(newData);
 
     if (insertResult.acknowledged === true) {
+      console.log("New data inserted successfully:", insertResult);
+
+      // Check if pageName is "enquiry"
+      if (newData.pageName === "enquiry") {
+        console.log("Page name is enquiry, checking for existing mobile_phone");
+
+        // Check if mobile_phone value is already present in the collection, excluding the newly inserted document
+        console.log("Checking for mobile_phone:", newData.mobile_phone);
+        const existingData = await collection.findOne({
+          mobile_phone: newData.mobile_phone,
+          _id: { $ne: insertResult.insertedId } // Exclude the newly inserted document
+        });
+
+        console.log("Existing data with same mobile_phone:", existingData);
+
+        if (!existingData) {
+          // Create a replica data with pageName changed to "leads"
+          const replicaData = { ...newData, pageName: "leads" };
+          delete replicaData._id; // Remove the _id field to avoid duplicate key error
+          await collection.insertOne(replicaData);
+          console.log('New Lead inserted');
+        } else {
+          console.log('This is a duplicated lead');
+        }
+      }
+
       res.status(201).json({
         status: "success",
         data: newData,
       });
     } else {
+      console.log("Failed to acknowledge new data insertion:", insertResult);
       res.status(500).json({
         status: "failure",
         message: "Failed to create new app data",
       });
     }
   } catch (error) {
+    console.log("Error occurred while creating new app data:", error);
     res.status(500).json({
       status: "failure",
       message: error.message,
