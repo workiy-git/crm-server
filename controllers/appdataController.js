@@ -128,14 +128,14 @@ const createAppData = async (req, res) => {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
 
-    // Add history entry
-    newData.history = [
-      {
-        created_at: new Date(),
-        created_by: req.created_by || "", // Check if value is available, otherwise use empty string
-        created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
-      },
-    ];
+    // // Add history entry
+    // newData.history = [
+    //   {
+    //     created_at: new Date(),
+    //     created_by: req.created_by || "", // Check if value is available, otherwise use empty string
+    //     created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
+    //   },
+    // ];
 
     const insertResult = await collection.insertOne(newData);
 
