@@ -7,6 +7,7 @@ const routes = require("./routers/index.js");
 const connectToDatabase = require("./middlewares/database.js");
 
 app.use(cors());
+
 const jwt = require("jsonwebtoken"); // To decode JWT
 const jwksClient = require("jwks-rsa"); // For fetching AWS Cognito public keys
 const User = require("./models/user"); // MongoDB user model
