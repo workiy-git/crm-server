@@ -221,7 +221,7 @@ const updateAppDataByKey = async (req, res) => {
     // Create history entry
     const historyEntry = {
       updated_at: new Date(),  // UTC timestamp
-      updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
+      updated_by: req.user.first_name || "", // Check if user ID is available, otherwise use empty string
       updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
       updated_by_time_zone: userTimeZone, // Store user's time zone
       changes: changedKeys.reduce((acc, key) => {
