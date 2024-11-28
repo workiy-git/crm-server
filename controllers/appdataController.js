@@ -1,4 +1,5 @@
 const { ObjectId } = require("mongodb"); // Import ObjectId
+const { handleDuplicateLead } = require('./duplicateController');
 const config = require("../config/config.js");
 
 const getAppDataCollection = (req) => {
@@ -122,35 +123,72 @@ const getAppDataBasedOnFilter = async (req, res) => {
 };
 
 // Create new app data
+// const createAppData = async (req, res) => {
+//   console.log("Creating new app data");
+//   try {
+//     const collection = await getAppDataCollection(req);
+//     const newData = req.body;
+
+//     // // Add history entry
+//     // newData.history = [
+//     //   {
+//     //     created_at: new Date(),
+//     //     created_by: req.created_by || "", // Check if value is available, otherwise use empty string
+//     //     created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
+//     //   },
+//     // ];
+
+//     const insertResult = await collection.insertOne(newData);
+
+//     if (insertResult.acknowledged === true) {
+//       res.status(201).json({
+//         status: "success",
+//         data: newData,
+//       });
+//     } else {
+//       res.status(500).json({
+//         status: "failure",
+//         message: "Failed to create new app data",
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       status: "failure",
+//       message: error.message,
+//     });
+//   }
+// };
 const createAppData = async (req, res) => {
   console.log("Creating new app data");
   try {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
-
-    // // Add history entry
-    // newData.history = [
-    //   {
-    //     created_at: new Date(),
-    //     created_by: req.created_by || "", // Check if value is available, otherwise use empty string
-    //     created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
-    //   },
-    // ];
+    newData.pageName = "enquiry"; // Set pageName to "enquiry" by default
+    console.log("New data to be inserted:", newData);
 
     const insertResult = await collection.insertOne(newData);
 
     if (insertResult.acknowledged === true) {
+      console.log("New data inserted successfully:", insertResult);
+
+      // Check if pageName is "enquiry"
+      if (newData) {
+        await handleDuplicateLead(collection, newData, insertResult.insertedId);
+      }
+
       res.status(201).json({
         status: "success",
         data: newData,
       });
     } else {
+      console.log("Failed to acknowledge new data insertion:", insertResult);
       res.status(500).json({
         status: "failure",
         message: "Failed to create new app data",
       });
     }
   } catch (error) {
+    console.log("Error occurred while creating new app data:", error);
     res.status(500).json({
       status: "failure",
       message: error.message,
