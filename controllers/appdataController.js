@@ -164,6 +164,16 @@ const createAppData = async (req, res) => {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
     newData.pageName = "enquiry"; // Set pageName to "enquiry" by default
+
+    // Fetch the last enquiry
+    const lastEnquiry = await collection.find({ pageName: "enquiry" }).sort({ enquiry_id: -1 }).limit(1).toArray();
+    if (lastEnquiry.length > 0) {
+      const lastEnquiryId = lastEnquiry[0].enquiry_id;
+      const numericPart = parseInt(lastEnquiryId.slice(2)) + 1;
+      const newEnquiryId = "EN" + numericPart;
+      newData.enquiry_id = newEnquiryId;
+    }
+
     console.log("New data to be inserted:", newData);
 
     const insertResult = await collection.insertOne(newData);

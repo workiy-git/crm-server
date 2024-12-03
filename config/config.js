@@ -8,7 +8,7 @@ const configMap = {
   staging,
 };
 
-const environment = process.env.NODE_ENV || "staging";
+const environment = process.env.NODE_ENV || "development";
 const config = configMap[environment];
 
 module.exports = config;
