@@ -25,139 +25,97 @@ const getAllAppData = async (req, res) => {
 };
 
 // Function to get app data based on filter criteria
-const getAppDataBasedOnFilter_old = async (req, res) => {
-  console.log("Fetching app data based on filter");
-  // Check if req.body exists
-  if (!req.body) {
-    // Handle the absence of req.body
-    // For example, send a 400 Bad Request response
-    res.status(400).json({
-      status: "fail",
-      message: "No data provided in the request body.",
-    });
-    return; // Stop execution of the function
-  }
-
-  try {
-    // Extract filter criteria from request body
-
-    // Initialize an empty object for filterCriteria
-    let filterCriteria = {};
-
-    // Iterate over the keys of req.body
-    Object.keys(req.body).forEach((key) => {
-      // If the value is not undefined, add it to filterCriteria
-      if (req.body[key] !== undefined) {
-        filterCriteria[key] = req.body[key];
-      }
-    });
-    // const filterCriteria = {
-    //   pageName: req.body.pageName,
-    //   call_status: req.body.calls_status, // Ensure this matches your database field
-    // };
-
-    // // Remove undefined filter criteria
-    // Object.keys(filterCriteria).forEach(
-    //   (key) => filterCriteria[key] === undefined && delete filterCriteria[key]
-    // );
-
-    console.log(filterCriteria);
-
-    const collection = await getAppDataCollection(req);
-    // Query the database with the filter criteria
-    const filteredData = await collection
-      .aggregate([
-        { $match: filterCriteria },
-        // Add any additional aggregation stages here
-      ])
-      .toArray();
-    // Send the filtered data as response
-    res.status(200).json({
-      status: "success",
-      data: filteredData,
-    });
-  } catch (error) {
-    // Send error response
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
-};
-
-// Function to get app data based on filter criteria
 const getAppDataBasedOnFilter = async (req, res) => {
   console.log("Fetching app data based on filter");
-  // Check if req.body exists
-  if (!req.body) {
-    // Handle the absence of req.body
-    // For example, send a 400 Bad Request response
-    res.status(400).json({
+
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
+
+  if (!req.body || !Array.isArray(req.body)) {
+    console.log("Invalid request body:", req.body);
+    return res.status(400).json({
       status: "fail",
-      message: "No data provided in the request body.",
+      message: "Invalid or missing filter criteria. Ensure it's an array of pipeline stages.",
     });
-    return; // Stop execution of the function
   }
 
   try {
-    let filterCriteria = req.body;
+    // Log the user object from the request
+    console.log("User object in request:", JSON.stringify(req.user, null, 2));
 
-    console.log("filterCriteria");
-    console.log(filterCriteria);
+    let filterCriteria = req.body; // The pipeline stages passed in the request body
+
+    // Log the initial pipeline criteria
+    console.log("Initial filterCriteria:", JSON.stringify(filterCriteria, null, 2));
+
+    // Detect login-related requests to bypass role-based filtering
+    const isLoginRequest = filterCriteria.some(
+      (stage) =>
+        stage.$match &&
+        stage.$match.pageName === "users" &&
+        stage.$match.username
+    );
+
+    if (isLoginRequest) {
+      console.log("Login request detected. Bypassing role-based filtering.");
+    } else {
+      // Extract user role and name from req.user
+      const userRole = req.user?.role?.trim();
+      const userName = req.user?.username?.trim(); // Ensure you use `username` if that's the correct field
+
+      // Log extracted user details
+      console.log("Extracted userRole:", userRole);
+      console.log("Extracted userName:", userName);
+
+      if (!userRole || !userName) {
+        console.error("User role or name is not defined in the request.");
+        return res.status(400).json({
+          status: "fail",
+          message: "User role or name is not defined in the request.",
+        });
+      }
+
+      console.log(`User role: ${userRole}`);
+      console.log(`User name: ${userName}`);
+
+      // Apply role-based filtering for "Presales Team" or "Sales Team"
+      if (userRole === "Presales Team" || userRole === "Sales Team") {
+        const normalizedUserName = userName.trim();
+  console.log(`Applying role-based filter for user: ${normalizedUserName}`);
+        console.log(`Applying role-based filter for ${userRole}: ${userName}`);
+
+        // Add role-based filter to the pipeline
+        filterCriteria.push({
+          $match: { assigned_to: { $regex: `^${normalizedUserName}$`, $options: "i" } },
+        });
+      } else {
+        console.log("No role-based filtering applied for this user.");
+      }
+    }
+
+    // Log the final pipeline criteria after applying filters
+    console.log("Final filterCriteria:", JSON.stringify(filterCriteria, null, 2));
 
     const collection = await getAppDataCollection(req);
-    // Query the database with the filter criteria
+
+    // Query the database using the final pipeline
     const filteredData = await collection.aggregate(filterCriteria).toArray();
-    // Send the filtered data as response
+
+    // Log the filtered data before sending the response
+    console.log("Filtered data:", JSON.stringify(filteredData, null, 2));
+
     res.status(200).json({
       status: "success",
       data: filteredData,
     });
   } catch (error) {
-    // Send error response
+    // Log any errors that occur
+    console.error("Error fetching data:", error.message, error.stack);
     res.status(500).json({
       status: "failure",
       message: error.message,
     });
   }
 };
-
-// Create new app data
-// const createAppData = async (req, res) => {
-//   console.log("Creating new app data");
-//   try {
-//     const collection = await getAppDataCollection(req);
-//     const newData = req.body;
-
-//     // // Add history entry
-//     // newData.history = [
-//     //   {
-//     //     created_at: new Date(),
-//     //     created_by: req.created_by || "", // Check if value is available, otherwise use empty string
-//     //     created_by_id: req.created_by_id || "", // Check if value is available, otherwise use empty string
-//     //   },
-//     // ];
-
-//     const insertResult = await collection.insertOne(newData);
-
-//     if (insertResult.acknowledged === true) {
-//       res.status(201).json({
-//         status: "success",
-//         data: newData,
-//       });
-//     } else {
-//       res.status(500).json({
-//         status: "failure",
-//         message: "Failed to create new app data",
-//       });
-//     }
-//   } catch (error) {
-//     res.status(500).json({
-//       status: "failure",
-//       message: error.message,
-//     });
-//   }
-// };
 const createAppData = async (req, res) => {
   console.log("Creating new app data");
   try {
@@ -212,11 +170,6 @@ const getAppDataByKey = async (req, res) => {
   try {
     const collection = await getAppDataCollection(req);
     const keyValue = String(req.params.key);
-    // const data = await collection.findOne({
-    //   [`appdata.${keyValue}`]: { $exists: true },
-    // });
-
-    // Convert string key to ObjectId
     const objectId = new ObjectId(keyValue);
     const data = await collection.findOne({ _id: objectId });
 
@@ -303,54 +256,6 @@ const updateAppDataByKey = async (req, res) => {
     });
   }
 };
-
-
-// // Update app data by key
-// const updateAppDataCommentsByKey = async (req, res) => {
-//   console.log(`Updating app data with key: ${req.params.key}`);
-//   try {
-//     const collection = await getAppDataCollection(req);
-//     const keyValue = req.params.key;
-//     const updateData = req.body;
-
-//     // Convert string key to ObjectId
-//     const objectId = new ObjectId(keyValue);
-
-//     // Create comments entry if comments are provided
-//     const commentsEntry = req.body.comments
-//       ? {
-//           updated_at: new Date(),
-//           updated_by: req.body.created_by || "", // Check if user ID is available, otherwise use empty string
-//           updated_by_id: req.body.created_by_id || "", // Check if user ID is available, otherwise use empty string
-//           comments: req.body.comments,
-//         }
-//       : null;
-
-//     const result = await collection.updateOne(
-//       { _id: objectId },
-//       {
-//         $set: updateData,
-//         $push: { comments: { $each: [commentsEntry], $position: 0 } }, // Append on top
-//       }
-//     );
-
-//     if (result.modifiedCount === 0) {
-//       return res
-//         .status(404)
-//         .json({ message: "No document found with the specified key" });
-//     } else {
-//       res.status(200).json({
-//         status: "success",
-//         data: updateData,
-//       });
-//     }
-//   } catch (error) {
-//     res.status(500).json({
-//       status: "failure",
-//       message: error.message,
-//     });
-//   }
-// };
 
 const updateCommentsByKey = async (req, res) => {
   console.log(`Updating comments for app data with key: ${req.params.key}`);
