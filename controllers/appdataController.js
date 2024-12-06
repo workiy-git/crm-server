@@ -28,88 +28,70 @@ const getAllAppData = async (req, res) => {
 const getAppDataBasedOnFilter = async (req, res) => {
   console.log("Fetching app data based on filter");
 
-  console.log("Request body:", JSON.stringify(req.body, null, 2));
-
-  if (!req.body || !Array.isArray(req.body)) {
-    console.log("Invalid request body:", req.body);
-    return res.status(400).json({
+  // Check if req.body exists
+  if (!req.body) {
+    // Handle the absence of req.body
+    res.status(400).json({
       status: "fail",
-      message: "Invalid or missing filter criteria. Ensure it's an array of pipeline stages.",
+      message: "No data provided in the request body.",
     });
+    return; // Stop execution of the function
   }
 
   try {
-    // Log the user object from the request
-    console.log("User object in request:", JSON.stringify(req.user, null, 2));
+    let filterCriteria = req.body;
+    let filterCriterias = req.body;
 
-    let filterCriteria = req.body; // The pipeline stages passed in the request body
+    console.log("filterCriteria");
+    console.log(filterCriteria);
 
-    // Log the initial pipeline criteria
-    console.log("Initial filterCriteria:", JSON.stringify(filterCriteria, null, 2));
+    // Check if pagination should be applied
+    let pageName = req.headers.pagename;
+    let page = 1;  // default page
+    let pageSize = 10; // default page size
 
-    // Detect login-related requests to bypass role-based filtering
-    const isLoginRequest = filterCriteria.some(
-      (stage) =>
-        stage.$match &&
-        stage.$match.pageName === "users" &&
-        stage.$match.username
-    );
+    if (pageName !== 'login') {
+      // Apply pagination only if pageName is not 'login'
+      page = parseInt(req.query.page) || 1;
+      pageSize = parseInt(req.query.pageSize) || 25;
 
-    if (isLoginRequest) {
-      console.log("Login request detected. Bypassing role-based filtering.");
-    } else {
-      // Extract user role and name from req.user
-      const userRole = req.user?.role?.trim();
-      const userName = req.user?.username?.trim(); // Ensure you use `username` if that's the correct field
-
-      // Log extracted user details
-      console.log("Extracted userRole:", userRole);
-      console.log("Extracted userName:", userName);
-
-      if (!userRole || !userName) {
-        console.error("User role or name is not defined in the request.");
-        return res.status(400).json({
-          status: "fail",
-          message: "User role or name is not defined in the request.",
-        });
-      }
-
-      console.log(`User role: ${userRole}`);
-      console.log(`User name: ${userName}`);
-
-      // Apply role-based filtering for "Presales Team" or "Sales Team"
-      if (userRole === "Presales Team" || userRole === "Sales Team") {
-        const normalizedUserName = userName.trim();
-  console.log(`Applying role-based filter for user: ${normalizedUserName}`);
-        console.log(`Applying role-based filter for ${userRole}: ${userName}`);
-
-        // Add role-based filter to the pipeline
-        filterCriteria.push({
-          $match: { assigned_to: { $regex: `^${normalizedUserName}$`, $options: "i" } },
-        });
-      } else {
-        console.log("No role-based filtering applied for this user.");
-      }
+      // Add pagination to the filterCriteria
+      filterCriteria = [
+        ...filterCriteria, // Existing filter criteria
+        { $skip: (page - 1) * pageSize },  // Skip documents based on current page
+        { $limit: pageSize },             // Limit to the page size
+      ];
+      filterCriterias = [
+        ...filterCriterias,
+        { '$count': 'totalCount' }
+      ];
     }
-
-    // Log the final pipeline criteria after applying filters
-    console.log("Final filterCriteria:", JSON.stringify(filterCriteria, null, 2));
 
     const collection = await getAppDataCollection(req);
 
-    // Query the database using the final pipeline
+
+    const countResult = await collection.aggregate(filterCriterias).toArray();
+
+    // Extract the total count from the result
+    const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+    
+
+    // Query the database with the filter criteria
     const filteredData = await collection.aggregate(filterCriteria).toArray();
 
-    // Log the filtered data before sending the response
-    console.log("Filtered data:", JSON.stringify(filteredData, null, 2));
-
+    // Send the filtered data with pagination metadata
     res.status(200).json({
       status: "success",
       data: filteredData,
+      pagination: {
+        currentPage: page,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
     });
   } catch (error) {
-    // Log any errors that occur
-    console.error("Error fetching data:", error.message, error.stack);
+    // Send error response
     res.status(500).json({
       status: "failure",
       message: error.message,
