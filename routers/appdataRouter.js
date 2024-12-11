@@ -9,6 +9,8 @@ const {
   updateCommentsByKey,
   retrieveCommentsByKey,
   retrieveHistoryByKey,
+  updateSiteVisitsByKey,
+  retrieveSiteVisitsByKey,
 } = require("../controllers/appdataController.js");
 
 const router = express.Router();
@@ -26,6 +28,9 @@ router.get("/:key", getAppDataByKey);
 // Define the route for retrieving comments
 router.get("/comments/:key", retrieveCommentsByKey);
 
+// Define the route for retrieving sitevisit
+router.get("/sitevisits/:key", retrieveSiteVisitsByKey);
+
 // Define the route for retrieving history
 router.get("/history/:key", retrieveHistoryByKey);
 
@@ -33,6 +38,8 @@ router.get("/history/:key", retrieveHistoryByKey);
 router.put("/:key", updateAppDataByKey);
 
 router.put("/comments/:key", updateCommentsByKey);
+
+router.put("/sitevisits/:key", updateSiteVisitsByKey);
 
 // Route to delete app data by key
 router.delete("/:key", deleteAppDataByKey);

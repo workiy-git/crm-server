@@ -42,7 +42,6 @@ const getAppDataBasedOnFilter = async (req, res) => {
 
     // Log user object
     console.log("User object in request:", JSON.stringify(req.user, null, 2));
-
     const isLoginRequest = filterCriteria.some(
       (stage) =>
         stage.$match &&
@@ -96,7 +95,6 @@ const getAppDataBasedOnFilter = async (req, res) => {
     let pageName = req.headers.pagename;
     let page = 1; // Default page
     let pageSize = 10; // Default page size
-
     if (pageName !== "login") {
       page = parseInt(req.query.page) || 1;
       pageSize = parseInt(req.query.pageSize) || 25;
@@ -153,6 +151,7 @@ const createAppData = async (req, res) => {
       pageName: 'leads',
     });
 
+
     if (existingData) {
       // If data exists, update its re-enquired field to true
       const updateResult = await collection.updateOne(
@@ -170,7 +169,6 @@ const createAppData = async (req, res) => {
       if (newData) {
         await handleDuplicateLead(collection, newData, insertResult.insertedId);
       }
-      
       res.status(201).json({
         status: "success",
         data: newData,
@@ -373,6 +371,95 @@ const retrieveCommentsByKey = async (req, res) => {
   }
 };
 
+const updateSiteVisitsByKey = async (req, res) => {
+  console.log(`Updating Sitevisits for app data with key: ${req.params.key}`);
+  try {
+    const collection = await getAppDataCollection(req);
+    const keyValue = req.params.key;
+
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+
+    // Fetch the original document
+    const originalDoc = await collection.findOne({ _id: objectId });
+    if (!originalDoc) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    }
+
+    // Extract sitevisits entry from the request body
+    const sitevisitsData = req.body.sitevisits;
+    if (!sitevisitsData || !sitevisitsData.sitevisits) {
+      return res.status(400).json({ message: "No sitevisits provided" });
+    }
+
+    const sitevisitsEntry = {
+      updated_at: new Date(),
+      updated_by: sitevisitsData.updated_by || "", // Check if user ID is available, otherwise use empty string
+      updated_by_id: sitevisitsData.updated_by_id || "", // Check if user ID is available, otherwise use empty string
+      sitevisits: sitevisitsData.sitevisits,
+    };
+
+    const updateOperations = {
+      $push: { sitevisits: { $each: [sitevisitsEntry], $position: 0 } }, // Append on top
+    };
+
+    const result = await collection.updateOne(
+      { _id: objectId },
+      updateOperations
+    );
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    } else {
+      res.status(200).json({
+        status: "success",
+        data: sitevisitsEntry,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
+const retrieveSiteVisitsByKey = async (req, res) => {
+  console.log(`Retrieving sitevisits for app data with key: ${req.params.key}`);
+  try {
+    const collection = await getAppDataCollection(req);
+    const keyValue = req.params.key;
+
+    // Convert string key to ObjectId
+    const objectId = new ObjectId(keyValue);
+
+    // Fetch the document
+    const document = await collection.findOne({ _id: objectId });
+    if (!document) {
+      return res
+        .status(404)
+        .json({ message: "No document found with the specified key" });
+    }
+
+    // Extract sitevisits from the document
+    const sitevisits = document.sitevisits || [];
+
+    res.status(200).json({
+      status: "success",
+      data: sitevisits,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "failure",
+      message: error.message,
+    });
+  }
+};
+
 const retrieveHistoryByKey = async (req, res) => {
   console.log(`Retrieving history for app data with key: ${req.params.key}`);
   try {
@@ -456,4 +543,6 @@ module.exports = {
   updateCommentsByKey,
   retrieveCommentsByKey,
   retrieveHistoryByKey,
+  updateSiteVisitsByKey,
+  retrieveSiteVisitsByKey,
 };
