@@ -16,13 +16,13 @@ const handleDuplicateLead = async (collection, newData, insertedId) => {
       delete replicaData._id; // Remove the _id field to avoid duplicate key error
       delete replicaData.enquiry_id; // Remove the _id field to avoid duplicate key error
 
-      const lastLead = await collection.find({ pageName: "leads" }).sort({ lead_id: -1 }).limit(1).toArray();
-      if (lastLead.length > 0) {
-        const lastLeadId = lastLead[0].lead_id;
-        const numericPart = parseInt(lastLeadId.slice(2)) + 1;
-        const newLeadId = "LD" + numericPart;
-        replicaData.lead_id = newLeadId;
-      }
+      // const lastLead = await collection.find({ pageName: "leads" }).sort({ lead_id: -1 }).limit(1).toArray();
+      // if (lastLead.length > 0) {
+      //   const lastLeadId = lastLead[0].lead_id;
+      //   const numericPart = parseInt(lastLeadId.slice(2)) + 1;
+      //   const newLeadId = "LD" + numericPart;
+      //   replicaData.lead_id = newLeadId;
+      // }
 
       await collection.insertOne(replicaData);
       console.log('New Lead inserted');
