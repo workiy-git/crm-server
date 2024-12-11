@@ -42,7 +42,6 @@ const getAppDataBasedOnFilter = async (req, res) => {
 
     // Log user object
     console.log("User object in request:", JSON.stringify(req.user, null, 2));
-
     const isLoginRequest = filterCriteria.some(
       (stage) =>
         stage.$match &&
@@ -96,7 +95,6 @@ const getAppDataBasedOnFilter = async (req, res) => {
     let pageName = req.headers.pagename;
     let page = 1; // Default page
     let pageSize = 10; // Default page size
-
     if (pageName !== "login") {
       page = parseInt(req.query.page) || 1;
       pageSize = parseInt(req.query.pageSize) || 25;
@@ -148,17 +146,20 @@ const createAppData = async (req, res) => {
     const newData = req.body;
     newData.pageName = "enquiry"; // Set pageName to "enquiry" by default
 
-    // Fetch the last enquiry
-    const lastEnquiry = await collection.find({ pageName: "enquiry" }).sort({ enquiry_id: -1 }).limit(1).toArray();
-    if (lastEnquiry.length > 0) {
-      const lastEnquiryId = lastEnquiry[0].enquiry_id;
-      const numericPart = parseInt(lastEnquiryId.slice(2)) + 1;
-      const newEnquiryId = "EN" + numericPart;
-      newData.enquiry_id = newEnquiryId;
+    const existingData = await collection.findOne({
+      mobile_phone: newData.mobile_phone,
+      pageName: 'leads',
+    });
+
+
+    if (existingData) {
+      // If data exists, update its re-enquired field to true
+      const updateResult = await collection.updateOne(
+        { _id: existingData._id },
+        { $set: { "re-enquired": 'Yes' } }
+      );
     }
-
-    console.log("New data to be inserted:", newData);
-
+    
     const insertResult = await collection.insertOne(newData);
 
     if (insertResult.acknowledged === true) {
@@ -168,7 +169,6 @@ const createAppData = async (req, res) => {
       if (newData) {
         await handleDuplicateLead(collection, newData, insertResult.insertedId);
       }
-
       res.status(201).json({
         status: "success",
         data: newData,
