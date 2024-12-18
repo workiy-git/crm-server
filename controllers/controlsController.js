@@ -9,7 +9,7 @@ const getControlsByFilter = async (req, res) => {
   console.log("Fetching controls data based on filter");
 
   // Check if req.body exists
-  if (!req.body) {
+  if (!req.body || Object.keys(req.body).length === 0) {
     // Handle the absence of req.body
     // For example, send a 400 Bad Request response
     res.status(400).json({
