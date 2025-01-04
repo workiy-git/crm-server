@@ -10,7 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "amazon-cognito-identity-js": "^6.3.12",
     "aws-jwt-verify": "^4.0.1",
+    "aws-sdk": "^2.1692.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
