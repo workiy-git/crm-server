@@ -150,9 +150,7 @@ const createAppData = async (req, res) => {
       const userCreated = await addUserData(newData);
     };
 
-    newData.pageName = "enquiry"; // Set pageName to "enquiry" by default
-
-    const existingData = await collection.findOne({
+      const existingData = await collection.findOne({
       mobile_phone: newData.mobile_phone,
       pageName: 'leads',
     });
