@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb"); // Import ObjectId
 const { handleDuplicateLead } = require('./duplicateController');
 const config = require("../config/config.js");
+const { addUserData } = require("./createLibrary.js");
 
 const getAppDataCollection = (req) => {
   return req.db.collection(config.appdataCollectionName);
@@ -144,6 +145,11 @@ const createAppData = async (req, res) => {
   try {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
+    if(req.body.pageName === 'users') {
+      console.log("Creating new user data");
+      const userCreated = await addUserData(newData);
+    };
+
     newData.pageName = "enquiry"; // Set pageName to "enquiry" by default
 
     const existingData = await collection.findOne({
