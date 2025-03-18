@@ -1,100 +1,72 @@
-const config = require("../config/config.js");
-const { ObjectId } = require("mongodb"); // Assuming MongoDB for _id handling
+const { CognitoUserPool, CognitoUser, AuthenticationDetails } = require('amazon-cognito-identity-js');
+const config = require('../config/config'); // Import the config module
 
-const getCollection = (req) => {
-  return req.db.collection(config.loginCollectionName);
+const poolData = {
+    UserPoolId: "ap-south-1_y7TfqTA4N", // Use user pool id from config
+    ClientId: "2ic7i6hn5p5j3vqtk2sbhj4gg3", // Use client id from config
+};
+const createLoginData = (req, res) => {
+  // Implementation for creating login data
 };
 
-const getAllLoginData = async (req, res) => {
-  console.log("Get all data");
-  try {
-    const collection = await getCollection(req);
-    const data = await collection.find().toArray();
-    res.status(200).json({
-      status: "success",
-      data: data,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
+const getLoginData = (req, res) => {
+  // Implementation for getting a single login data by ID
 };
 
-const createLoginData = async (req, res) => {
-  try {
-    const collection = await getCollection(req);
-    const result = await collection.insertOne(req.body);
-    res.status(201).json({
-      status: "success",
-      data: result.ops[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
+const updateLoginData = (req, res) => {
+  // Implementation for updating login data by ID
 };
 
-const getLoginData = async (req, res) => {
-  try {
-    const collection = await getCollection(req);
-    const data = await collection.findOne({ _id: new ObjectId(req.params.id) });
-    res.status(200).json({
-      status: "success",
-      data: data,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
+const deleteLoginData = (req, res) => {
+  // Implementation for deleting login data by ID
 };
 
-const updateLoginData = async (req, res) => {
-  try {
-    const collection = await getCollection(req);
-    const result = await collection.updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: req.body }
-    );
-    res.status(200).json({
-      status: "success",
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
+const getAllLoginData = (req, res) => {
+  // Implementation for getting all login data
 };
 
-const deleteLoginData = async (req, res) => {
-  try {
-    const collection = await getCollection(req);
-    const result = await collection.deleteOne({
-      _id: new ObjectId(req.params.id),
+const userPool = new CognitoUserPool(poolData);
+
+const login = (req, res) => {
+    const { username, password, newPassword } = req.body;
+
+    const authenticationDetails = new AuthenticationDetails({
+        Username: username,
+        Password: password,
     });
-    res.status(200).json({
-      status: "success",
-      data: result,
+
+    const userData = {
+        Username: username,
+        Pool: userPool,
+    };
+
+    const cognitoUser = new CognitoUser(userData);
+
+    cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: (result) => {
+            res.send('Login successful');
+        },
+        onFailure: (err) => {
+            res.status(400).send(err.message || JSON.stringify(err));
+        },
+        newPasswordRequired: (userAttributes, requiredAttributes) => {
+            // User needs to set a new password
+            delete userAttributes.email_verified; // Remove email_verified attribute if present
+            cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
+                onSuccess: (result) => {
+                    res.send('Password changed successfully');
+                },
+                onFailure: (err) => {
+                    res.status(400).send(err.message || JSON.stringify(err));
+                },
+            });
+        },
     });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
-  }
 };
 
-module.exports = {
-  getAllLoginData,
+module.exports = { 
   createLoginData,
   getLoginData,
   updateLoginData,
   deleteLoginData,
-};
+  getAllLoginData };
