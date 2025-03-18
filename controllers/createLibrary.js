@@ -15,11 +15,12 @@ const addUserData = async (newData) => {
 
             const attributeList = [
                 new CognitoUserAttribute({ Name: 'email', Value: newData.email }),
-                new CognitoUserAttribute({ Name: 'phone_number', Value: newData.phone })
-              ];
+                new CognitoUserAttribute({ Name: 'phone_number', Value: newData.phone }),
+                new CognitoUserAttribute({ Name: 'email_verified', Value: 'true' }) // Mark email as verified
+            ];
 
             return new Promise((resolve, reject) => {
-                userPool.signUp(newData.username, 'TemporaryPassword123!', attributeList, null, (err, result) => {
+                userPool.signUp(newData.username, 'TemporaryPassword123!', null, null, (err, result) => {
                     if (err) {
                         console.error("Error creating user:", err);
                         reject(err);
