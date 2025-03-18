@@ -35,8 +35,9 @@ function getKey(header, callback) {
 // Middleware to verify JWT token and retrieve user role
 const authenticateToken = async (req, res, next) => {
   // Bypass token verification for the /pages/Login URL
-  if (req.url === "/pages/Login") {
-    return next();
+  const bypassUrls = ["/pages/Login", "/channelpartner", "/ivr/"];
+  if (bypassUrls.includes(req.url)) {
+      return next();
   }
   const token = req.headers["authorization"];
 

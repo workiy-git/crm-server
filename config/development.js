@@ -8,6 +8,7 @@ const config = {
   webFormCollectionName: "webforms", // Add your collection name here
   usersCollectionName: "users",
   appdataCollectionName: "appdata",
+  ivrCollectionName: "ivr",
   channelPartnerCollectionName: "channelPartner", // Add your collection name here
   dashboardsCollectionName: "dashboards", // Add your collection name here
   controlsCollectionName: "controls",

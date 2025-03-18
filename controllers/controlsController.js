@@ -1,4 +1,5 @@
 const config = require("../config/config.js");
+const { ObjectId } = require('mongodb');
 
 const getControlsCollection = (req) => {
   return req.db.collection(config.controlsCollectionName);
@@ -9,7 +10,7 @@ const getControlsByFilter = async (req, res) => {
   console.log("Fetching controls data based on filter");
 
   // Check if req.body exists
-  if (!req.body) {
+  if (!req.body || Object.keys(req.body).length === 0) {
     // Handle the absence of req.body
     // For example, send a 400 Bad Request response
     res.status(400).json({
@@ -83,28 +84,37 @@ const addControl = async (req, res) => {
 const updateControl = async (req, res) => {
   console.log("Updating control");
   try {
-    const collection = await getControlsCollection(req);
-    const result = await collection.updateOne(
-      { _id: req.params.id },
-      { $set: req.body }
-    );
-    if (result.matchedCount === 0) {
-      return res.status(404).json({
-        status: "failure",
-        message: "Control not found",
-      });
-    }
-    res.status(200).json({
-      status: "success",
-      message: "Control updated successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "failure",
-      message: error.message,
-    });
+  const collection = await getControlsCollection(req);
+  console.log("Collection fetched");
+   
+  const controlId = req.params.id;
+  console.log("Control ID:", controlId);
+   
+  const result = await collection.updateOne(
+  { _id: new ObjectId(controlId) },
+  { $set: req.body }
+  );
+  console.log("Update result:", result);
+   
+  if (result.matchedCount === 0) {
+  return res.status(404).json({
+  status: "failure",
+  message: "Control not found",
+  });
   }
-};
+   
+  res.status(200).json({
+  status: "success",
+  message: "Control updated successfully",
+  });
+  } catch (error) {
+  console.error("Error updating control:", error);
+  res.status(500).json({
+  status: "failure",
+  message: error.message,
+  });
+  }
+  };
 
 // Delete a control
 const deleteControl = async (req, res) => {
