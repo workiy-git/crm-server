@@ -145,30 +145,80 @@ const createAppData = async (req, res) => {
   try {
     const collection = await getAppDataCollection(req);
     const newData = req.body;
-    if(req.body.pageName === 'users') {
+    if (req.body.pageName === 'users') {
       console.log("Creating new user data");
       const userCreated = await addUserData(newData);
     };
-
-      const existingData = await collection.findOne({
+ 
+    const existingData = await collection.findOne({
       mobile_phone: newData.mobile_phone,
       pageName: 'leads',
     });
-
-
-    if (existingData) {
-      // If data exists, update its re-enquired field to true
+ 
+    const currentTime = new Date();
+    const historyEntry = {
+      updated_at: currentTime,
+      updated_by: newData.created_by || "System", // <- Corrected
+      updated_by_id: newData.created_by_id || "",
+      updated_by_time_zone: "UTC",
+      changes: {
+        re_enquired: {
+          new: "Duplicate Lead",
+        }
+      }
+    };
+   
+ 
+    if (existingData && newData.mobile_phone) {
       const updateResult = await collection.updateOne(
         { _id: existingData._id },
-        { $set: { "re-enquired": 'Yes' } }
+        {
+          $set: { re_enquired: "Yes" },
+          $push: {
+            history: {
+              $each: [historyEntry],
+              $position: 0 // 👈 Inserts at beginning of array
+            }
+          }
+        }
       );
+   
+      // const updateResult = await collection.updateOne(
+      //   { _id: existingData._id },
+      //   { $set: { "re-enquired": 'Yes' } },
+      //   $push: { history: historyEntry }
+      // );
     }
-    
-    const insertResult = await collection.insertOne(newData);
-
+ 
+    let dataToInsert = { ...newData };
+ 
+    // If it's an enquiry (leads) and a duplicate, mark it as Duplicate
+    if (newData.pageName === 'enquiry' && existingData) {
+      const currentTime = new Date();
+   
+      const historyEntry = {
+        updated_at: currentTime,
+        updated_by: newData.created_by || "System",
+        updated_by_id: newData.created_by_id || "",
+        updated_by_time_zone: "UTC",
+        changes: {
+          enquiry_status: {
+            new: "Duplicate Lead",
+          }
+        }
+      };
+   
+      // Add enquiry_status and history to the new data before insert
+      dataToInsert.enquiry_status = 'Duplicate';
+      dataToInsert.history = [historyEntry]; // Add history array with 1 entry
+    }
+ 
+    // Insert the new data
+    const insertResult = await collection.insertOne(dataToInsert);
+ 
     if (insertResult.acknowledged === true) {
       console.log("New data inserted successfully:", insertResult);
-
+ 
       // Check if pageName is "enquiry"
       if (newData) {
         await handleDuplicateLead(collection, newData, insertResult.insertedId);
