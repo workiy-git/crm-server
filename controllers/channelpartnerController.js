@@ -317,9 +317,25 @@ async function createOrUpdateAppDataFromChannelPartnerData(
         // } else {
 
         // Update re_engaged to "Yes" for the existing lead with pageName="leads"
+        const currentTime = new Date();
+        const historyEntry = {
+          updated_at: currentTime,
+          updated_by: channelPartnerData.created_by || "System", // Or pass from request
+          updated_by_id: channelPartnerData.created_by_id || "",
+          updated_by_time_zone: "UTC",
+          changes: {
+            re_engaged: {
+              new: "Duplicate Lead",
+            }
+          }
+        };
+ 
         const updateResult = await appDataCollection.updateOne(
           { _id: existingData._id },
-          { $set: { re_engaged: "Yes" } }
+          {
+            $set: { re_engaged: "Yes" },
+            $push: { history: historyEntry }
+          }
         );
 
         // Insert new data
