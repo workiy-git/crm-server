@@ -8,6 +8,7 @@ const routes = require("./routers/index.js");
 const connectToDatabase = require("./middlewares/database.js");
 
 app.use(cors());
+app.options("*", cors());
 app.use(express.urlencoded({ extended: true }));
 const jwt = require("jsonwebtoken"); // To decode JWT
 const jwksClient = require("jwks-rsa"); // For fetching AWS Cognito public keys
