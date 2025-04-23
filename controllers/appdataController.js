@@ -38,11 +38,11 @@ const getAppDataBasedOnFilter = async (req, res) => {
   }
 
   try {
-    let filterCriteria = req.body; // Pipeline stages passed in the request body
-    let countPipeline = [...filterCriteria]; // Pipeline for counting total results
-
-    // Log user object
+    let filterCriteria = req.body;
+    let countPipeline = [...filterCriteria];  // This will be used for count only
     console.log("User object in request:", JSON.stringify(req.user, null, 2));
+
+    // Handle user-based filtering
     const isLoginRequest = filterCriteria.some(
       (stage) =>
         stage.$match &&
@@ -70,57 +70,85 @@ const getAppDataBasedOnFilter = async (req, res) => {
       if (userRole === "Presales Team" || userRole === "Sales Team") {
         const normalizedUserName = userName.trim();
         console.log(`Applying role-based filter for user: ${normalizedUserName}`);
-      
-        filterCriteria.push({
-          $match: { 
-            assigned_to: { 
-              $regex: `^\\s*${normalizedUserName}\\s*$`, // Match spaces around the name
-              $options: "i" // Case-insensitive match
-            } 
+
+        const matchStage = {
+          $match: {
+            assigned_to: {
+              $regex: `^\\s*${normalizedUserName}\\s*$`,
+              $options: "i",
+            },
           },
-        });
-      
-        countPipeline.push({
-          $match: { 
-            assigned_to: { 
-              $regex: `^\\s*${normalizedUserName}\\s*$`, // Match spaces around the name
-              $options: "i" // Case-insensitive match
-            } 
+        };
+
+        filterCriteria.push(matchStage);
+        countPipeline.push(matchStage);  // Ensure the count pipeline also includes this match
+      }
+    }
+
+    // Sorting logic
+    const sortFields = req.query.sortField?.split(",").filter(Boolean) || [];
+    const sortOrders = req.query.sortOrder?.split(",").filter(Boolean) || [];
+
+    const sortStage = {};
+    if (sortFields.length > 0) {
+      sortFields.forEach((field, index) => {
+        sortStage[field] = sortOrders[index] === "desc" ? -1 : 1;
+      });
+    } else {
+      sortStage["created_time"] = 1;
+    }
+
+    // Pagination and count
+    const pageName = req.headers.pagename;
+    let page = parseInt(req.query.page) || 1;
+    let pageSize = parseInt(req.query.pageSize) || 25;
+    let totalCount = 0;
+
+    const collection = await getAppDataCollection(req);
+
+    // Calculate total count for pagination (before applying filter)
+    if (pageName !== "login") {
+      // Add count stage to the pipeline for pagination purposes (without filter)
+      const alreadyHasCountStage = countPipeline.some((stage) => stage.$count);
+      if (!alreadyHasCountStage) {
+        countPipeline.push({ $count: "totalCount" });
+      }
+
+      // Run count query on the database without the filter
+      const countResult = await collection.aggregate(countPipeline, { allowDiskUse: true }).toArray();
+      console.log("Count result:", countResult);
+      totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+      console.log(`Total count: ${totalCount}`);
+
+      const totalPages = Math.ceil(totalCount / pageSize);
+      if (totalPages === 0) {
+        return res.status(200).json({
+          status: "success",
+          data: [],
+          pagination: {
+            currentPage: 1,
+            pageSize,
+            totalCount: 0,
+            totalPages: 0,
           },
         });
       }
+      if (page > totalPages && totalPages > 0) {
+        return res.status(400).json({
+          status: "fail",
+          message: `Requested page (${page}) exceeds total pages (${totalPages}).`,
+        });
+      }
       
-    }
-
-    // Pagination logic
-    let pageName = req.headers.pagename;
-    let page = 1; // Default page
-    let pageSize = 10; // Default page size
-    if (pageName !== "login") {
-      page = parseInt(req.query.page) || 1;
-      pageSize = parseInt(req.query.pageSize) || 25;
-
-      // Add pagination to the filter criteria
+      // After counting, apply pagination: skip and limit
       filterCriteria.push(
         { $skip: (page - 1) * pageSize },
         { $limit: pageSize }
       );
-
-      countPipeline.push({
-        $count: "totalCount",
-      });
     }
+    filterCriteria.push({ $sort: sortStage });
+    const filteredData = await collection.aggregate(filterCriteria, { allowDiskUse: true }).toArray();
 
-    const collection = await getAppDataCollection(req);
-
-    // Fetch total count
-    const countResult = await collection.aggregate(countPipeline).toArray();
-    const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
-
-    // Fetch paginated and filtered data
-    const filteredData = await collection.aggregate(filterCriteria).toArray();
-
-    // Send the response with data and pagination metadata
     res.status(200).json({
       status: "success",
       data: filteredData,
@@ -139,6 +167,7 @@ const getAppDataBasedOnFilter = async (req, res) => {
     });
   }
 };
+
 
 const createAppData = async (req, res) => {
   console.log("Creating new app data");
