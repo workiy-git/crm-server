@@ -40,9 +40,7 @@ const getAppDataBasedOnFilter = async (req, res) => {
   try {
     let filterCriteria = req.body; // Pipeline stages passed in the request body
     let countPipeline = [...filterCriteria]; // Pipeline for counting total results
-
-    // Log user object
-    console.log("User object in request:", JSON.stringify(req.user, null, 2));
+     console.log("User object in request:", JSON.stringify(req.user, null, 2));
     const isLoginRequest = filterCriteria.some(
       (stage) =>
         stage.$match &&
@@ -70,37 +68,47 @@ const getAppDataBasedOnFilter = async (req, res) => {
       if (userRole === "Presales Team" || userRole === "Sales Team") {
         const normalizedUserName = userName.trim();
         console.log(`Applying role-based filter for user: ${normalizedUserName}`);
-      
-        filterCriteria.push({
-          $match: { 
-            assigned_to: { 
-              $regex: `^\\s*${normalizedUserName}\\s*$`, // Match spaces around the name
-              $options: "i" // Case-insensitive match
-            } 
+
+        const matchStage = {
+          $match: {
+            assigned_to: {
+              $regex: `^\\s*${normalizedUserName}\\s*$`,
+              $options: "i",
+            },
           },
-        });
-      
-        countPipeline.push({
-          $match: { 
-            assigned_to: { 
-              $regex: `^\\s*${normalizedUserName}\\s*$`, // Match spaces around the name
-              $options: "i" // Case-insensitive match
-            } 
-          },
-        });
+        };
+
+        filterCriteria.push(matchStage);
+        countPipeline.push(matchStage);
       }
-      
     }
 
+    const sortFields = req.query.sortField?.split(",").filter(Boolean) || [];
+    const sortOrders = req.query.sortOrder?.split(",").filter(Boolean) || [];
+
+    const sortStage = {};
+
+    if (sortFields.length > 0) {
+      // Apply user-defined sorting
+      sortFields.forEach((field, index) => {
+        sortStage[field] = sortOrders[index] === "desc" ? -1 : 1;
+      });
+    } else {
+      // Default to created_time if no sort field provided
+      sortStage["created_time"] = 1;
+    }
+
+    filterCriteria.push({ $sort: sortStage });
+
     // Pagination logic
-    let pageName = req.headers.pagename;
-    let page = 1; // Default page
-    let pageSize = 10; // Default page size
+    const pageName = req.headers.pagename;
+    let page = 1;
+    let pageSize = 10;
+
     if (pageName !== "login") {
       page = parseInt(req.query.page) || 1;
       pageSize = parseInt(req.query.pageSize) || 25;
 
-      // Add pagination to the filter criteria
       filterCriteria.push(
         { $skip: (page - 1) * pageSize },
         { $limit: pageSize }
@@ -113,14 +121,13 @@ const getAppDataBasedOnFilter = async (req, res) => {
 
     const collection = await getAppDataCollection(req);
 
-    // Fetch total count
+    // Count total
     const countResult = await collection.aggregate(countPipeline).toArray();
     const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
 
-    // Fetch paginated and filtered data
+    // Fetch final data
     const filteredData = await collection.aggregate(filterCriteria).toArray();
 
-    // Send the response with data and pagination metadata
     res.status(200).json({
       status: "success",
       data: filteredData,
