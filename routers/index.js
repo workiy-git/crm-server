@@ -19,7 +19,7 @@ router.use("/menus", menuRouter);
 router.use("/webforms", authorizeRole(["Super Admin", "Admin", "Team Lead", "Presales Team","Sales Team", "CP", "ACP"]), webformsRouter);
 router.use("/users", authorizeRole(["Super Admin", "Admin", "Team Lead", "Presales Team","Sales Team", "CP", "ACP"]), userRouter);
 router.use("/appdata", appdataRouter);
-router.use("/channelpartner", authorizeRole(["Super Admin", "Admin", "Team Lead", "Presales Team","Sales Team", "CP", "ACP"]), channelpartnerRouter);
+router.use("/channelpartner", channelpartnerRouter);
 router.use("/ivr", ivrRouter);
 router.use("/dashboards", authorizeRole(["Super Admin", "Admin", "Team Lead", "Presales Team","Sales Team", "CP", "ACP"]), dashboardRouter); // Example: Only Admins can access dashboards
 router.use("/controls", authorizeRole(["Super Admin", "Admin", "Team Lead", "Presales Team","Sales Team", "CP", "ACP"]), controlsRouter); // Example: Only Super_Admins can access controls
