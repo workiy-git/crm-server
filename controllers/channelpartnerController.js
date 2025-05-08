@@ -9,16 +9,13 @@ const getChannelPartnerCollection = (req) => {
 const createChannelPartnerData = async (req, res) => {
   try {
     const channelPartnerData = {
-      ...req.body,
+      ...req.body[0],
       receivedAt: new Date(),
     };
+    
     const collection = getChannelPartnerCollection(req);
     const result = await collection.insertOne(channelPartnerData);
-    console.log("channelPartnerData");
-    console.log(result);
     if (result.acknowledged) {
-      console.log("result");
-      console.log(result);
 
       // Check if the insert operation was successful
       const newChannelPartnerId = result.insertedId; // Retrieve the ObjectId of the newly inserted document
@@ -183,7 +180,8 @@ async function createappDataFromChannelPartnerData(
           console.log(newKey, oldKey);
           destinationJSON[newKey] = oldKey;
         } else if (newKey === "created_time") {
-          destinationJSON[newKey] = new Date();
+          const now = new Date();
+          destinationJSON[newKey] = now.toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
         } else {
           destinationJSON[newKey] = "";
         }
@@ -283,7 +281,8 @@ async function createOrUpdateAppDataFromChannelPartnerData(
               console.log("Assigning pageName:", mappingJSON.pageName);
               destinationJSON[newKey] = oldKey;
             } else if (newKey === "created_time") {
-              destinationJSON[newKey] = new Date();
+              const now = new Date();
+              destinationJSON[newKey] = now.toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
             } else if (newKey === "enquiry_status") {
               destinationJSON[newKey] = "Duplicate";
             } else {
@@ -299,6 +298,8 @@ async function createOrUpdateAppDataFromChannelPartnerData(
               const numericPart = parseInt(lastEnquiryId.slice(2)) + 1;
               const newEnquiryId = "EN" + numericPart;
               destinationJSON.enquiry_id = newEnquiryId;
+            } else {
+              destinationJSON.enquiry_id = "EN100001"; // Default to EN1 if no previous enquiry exists
             }
 
         // // Check if mobile_phone exists in appDataCollection with pageName="leads"
@@ -308,23 +309,24 @@ async function createOrUpdateAppDataFromChannelPartnerData(
         // });
 
         // if (existingData) {
-        //   // Update re_engaged to true
+        //   // Update re_enquired to true
         //   const updateResult = await appDataCollection.updateOne(
         //     { _id: existingData._id },
-        //     { $set: { re_engaged: true } }
+        //     { $set: { re_enquired: true } }
         //   );
         //   return updateResult.modifiedCount > 0;
         // } else {
 
-        // Update re_engaged to "Yes" for the existing lead with pageName="leads"
-        const currentTime = new Date();
+        // Update re_enquired to "Yes" for the existing lead with pageName="leads"
+        const now = new Date();
+        const currentTime = now.toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
         const historyEntry = {
           updated_at: currentTime,
           updated_by: channelPartnerData.created_by || "System", // Or pass from request
           updated_by_id: channelPartnerData.created_by_id || "",
           updated_by_time_zone: "UTC",
           changes: {
-            re_engaged: {
+            re_enquired: {
               new: "Duplicate Lead",
             }
           }
@@ -333,7 +335,10 @@ async function createOrUpdateAppDataFromChannelPartnerData(
         const updateResult = await appDataCollection.updateOne(
           { _id: existingData._id },
           {
-            $set: { re_engaged: "Yes" },
+            $set: {
+              re_enquired: "Yes",
+              lead_status: "Duplicate"
+            },
             $push: { history: historyEntry }
           }
         );
@@ -358,7 +363,10 @@ async function createOrUpdateAppDataFromChannelPartnerData(
             if (newKey === "pageName") {
               destinationJSON[newKey] = mappingJSON.pageName;
             } else if (newKey === "created_time") {
-              destinationJSON[newKey] = new Date();
+              const now = new Date();
+              destinationJSON[newKey] = now.toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
+            } else if (newKey === "lead_status") {
+              destinationJSON[newKey] = "New Lead";
             } else {
               destinationJSON[newKey] = "";
             }
@@ -372,6 +380,8 @@ async function createOrUpdateAppDataFromChannelPartnerData(
             const numericPart = parseInt(lastLeadId.slice(2)) + 1;
             const newLeadId = "LD" + numericPart;
             destinationJSON.lead_id = newLeadId;
+          } else {
+            destinationJSON.lead_id = "LD100001"; // Default to LD1 if no previous lead exists
           }
 
         // Insert new data for leads
@@ -393,9 +403,10 @@ async function createOrUpdateAppDataFromChannelPartnerData(
                 if (newKey === "pageName") {
                   enquiryJSON[newKey] = enquiryMapping.pageName;
                 } else if (newKey === "created_time") {
-                  enquiryJSON[newKey] = new Date();
+                  const now = new Date();
+                  enquiryJSON[newKey] = now.toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
                 } else if (newKey === "enquiry_status") {
-                  enquiryJSON[newKey] = "New Lead";
+                  enquiryJSON[newKey] = "New";
                 } else {
                   enquiryJSON[newKey] = "";
                 }
@@ -409,6 +420,8 @@ async function createOrUpdateAppDataFromChannelPartnerData(
               const numericPart = parseInt(lastEnquiryId.slice(2)) + 1;
               const newEnquiryId = "EN" + numericPart;
               enquiryJSON.enquiry_id = newEnquiryId;
+            } else {
+              enquiryJSON.enquiry_id = "EN100001"; // Default to EN1 if no previous enquiry exists
             }
 
             const resultEnquiryData = await appDataCollection.insertOne(enquiryJSON);

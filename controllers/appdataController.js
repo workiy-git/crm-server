@@ -180,8 +180,10 @@ const createAppData = async (req, res) => {
       const updateResult = await collection.updateOne(
         { _id: existingData._id },
         {
-          $set: { re_enquired: "Yes" },
-          $set: { lead_status: "Duplicate" },
+          $set: {
+            re_enquired: "Yes",
+            lead_status: "Duplicate"
+          },
           $push: {
             history: {
               $each: [historyEntry],
