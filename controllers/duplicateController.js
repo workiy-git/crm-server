@@ -14,22 +14,38 @@ const handleDuplicateLead = async (collection, newData, insertedId) => {
     // Create a new lead document
     const replicaData = { ...newData, pageName: "leads" };
     delete replicaData._id;
-    delete replicaData.enquiry_id;
  
     // Generate unique lead_id
-    const lastLead = await collection
-      .find({ pageName: "leads", lead_id: { $regex: /^LD\d+$/ } })
-      .sort({ lead_id: -1 })
-      .limit(1)
-      .toArray();
- 
+    const lastLead = await collection.aggregate([
+      {
+        $match: {
+          pageName: "leads",
+          lead_id: { $regex: /^LD\d+$/ }
+        }
+      },
+      {
+        $addFields: {
+          leadNumber: { $toInt: { $substr: ["$lead_id", 2, -1] } }
+        }
+      },
+      {
+        $sort: { leadNumber: -1 }
+      },
+      {
+        $limit: 1
+      }
+    ]).toArray();
+    
     if (lastLead.length > 0 && lastLead[0].lead_id) {
       const lastLeadId = lastLead[0].lead_id;
-      const numericPart = parseInt(lastLeadId.slice(2)) + 1;
-      replicaData.lead_id = "LD" + numericPart;
+      const numericPart = parseInt(lastLeadId.slice(2), 10) + 1;
+      replicaData.lead_id = "LD" + numericPart.toString().padStart(6, "0");
+      replicaData.lead_status = "New lead";
     } else {
-      replicaData.lead_id = "LD1001"; // default starting point
-    }
+      replicaData.lead_id = "LD100001"; // default starting point
+      replicaData.lead_status = "New lead";
+    }    
+    
  
     // Add history entry for creation
     const currentTime = new Date();

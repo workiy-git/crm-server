@@ -40,7 +40,7 @@ const getAppDataBasedOnFilter = async (req, res) => {
   try {
     let filterCriteria = req.body; // Pipeline stages passed in the request body
     let countPipeline = [...filterCriteria]; // Pipeline for counting total results
-     console.log("User object in request:", JSON.stringify(req.user, null, 2));
+    console.log("User object in request:", JSON.stringify(req.user, null, 2));
     const isLoginRequest = filterCriteria.some(
       (stage) =>
         stage.$match &&
@@ -156,12 +156,12 @@ const createAppData = async (req, res) => {
       console.log("Creating new user data");
       const userCreated = await addUserData(newData);
     };
- 
+
     const existingData = await collection.findOne({
       mobile_phone: newData.mobile_phone,
       pageName: 'leads',
     });
- 
+
     const currentTime = new Date();
     const historyEntry = {
       updated_at: currentTime,
@@ -174,13 +174,14 @@ const createAppData = async (req, res) => {
         }
       }
     };
-   
- 
+
+
     if (existingData && newData.mobile_phone) {
       const updateResult = await collection.updateOne(
         { _id: existingData._id },
         {
           $set: { re_enquired: "Yes" },
+          $set: { lead_status: "Duplicate" },
           $push: {
             history: {
               $each: [historyEntry],
@@ -189,20 +190,50 @@ const createAppData = async (req, res) => {
           }
         }
       );
-   
+
       // const updateResult = await collection.updateOne(
       //   { _id: existingData._id },
       //   { $set: { "re-enquired": 'Yes' } },
       //   $push: { history: historyEntry }
       // );
     }
- 
+
     let dataToInsert = { ...newData };
- 
+
     // If it's an enquiry (leads) and a duplicate, mark it as Duplicate
     if (newData.pageName === 'enquiry' && existingData) {
+      const lastEnquiry = await collection.aggregate([
+        {
+          $match: {
+            pageName: "enquiry",
+            enquiry_id: { $regex: /^EN\d+$/ }
+          }
+        },
+        {
+          $addFields: {
+            enquiryNumber: { $toInt: { $substr: ["$enquiry_id", 2, -1] } }
+          }
+        },
+        {
+          $sort: { enquiryNumber: -1 }
+        },
+        {
+          $limit: 1
+        }
+      ]).toArray();
+    
+      if (lastEnquiry.length > 0 && lastEnquiry[0].enquiry_id) {
+        const lastEnquiryId = lastEnquiry[0].enquiry_id;
+        const numericPart = parseInt(lastEnquiryId.slice(2), 10) + 1;
+        dataToInsert.enquiry_id = "EN" + numericPart;
+        dataToInsert.enquiry_status = "New";
+      } else {
+        dataToInsert.enquiry_id = "EN100001"; // default starting point
+        dataToInsert.enquiry_status = "New";
+      }
+      
       const currentTime = new Date();
-   
+
       const historyEntry = {
         updated_at: currentTime,
         updated_by: newData.created_by || "System",
@@ -214,18 +245,66 @@ const createAppData = async (req, res) => {
           }
         }
       };
-   
+
       // Add enquiry_status and history to the new data before insert
       dataToInsert.enquiry_status = 'Duplicate';
       dataToInsert.history = [historyEntry]; // Add history array with 1 entry
     }
- 
+
+
+    // Only assign enquiry_id if it's a new enquiry (not duplicate)
+   if (newData.pageName === 'enquiry' && !existingData) {
+  const lastEnquiry = await collection.aggregate([
+    {
+      $match: {
+        pageName: "enquiry",
+        enquiry_id: { $regex: /^EN\d+$/ }
+      }
+    },
+    {
+      $addFields: {
+        enquiryNumber: { $toInt: { $substr: ["$enquiry_id", 2, -1] } }
+      }
+    },
+    {
+      $sort: { enquiryNumber: -1 }
+    },
+    {
+      $limit: 1
+    }
+  ]).toArray();
+
+  if (lastEnquiry.length > 0 && lastEnquiry[0].enquiry_id) {
+    const lastEnquiryId = lastEnquiry[0].enquiry_id;
+    const numericPart = parseInt(lastEnquiryId.slice(2), 10) + 1;
+    dataToInsert.enquiry_id = "EN" + numericPart;
+    dataToInsert.enquiry_status = "New";
+  } else {
+    dataToInsert.enquiry_id = "EN100001"; // default starting point
+    dataToInsert.enquiry_status = "New";
+  }
+
+  // Add initial history
+  dataToInsert.history = [{
+    updated_at: new Date(),
+    updated_by: newData.created_by || "System",
+    updated_by_id: newData.created_by_id || "",
+    updated_by_time_zone: "UTC",
+    changes: {
+      enquiry_status: {
+        new: "New"
+      }
+    }
+  }];
+}
+
+
     // Insert the new data
     const insertResult = await collection.insertOne(dataToInsert);
- 
+
     if (insertResult.acknowledged === true) {
       console.log("New data inserted successfully:", insertResult);
- 
+
       // Check if pageName is "enquiry"
       if (newData) {
         await handleDuplicateLead(collection, newData, insertResult.insertedId);
@@ -547,9 +626,8 @@ const retrieveHistoryByKey = async (req, res) => {
         })
         .join(", ");
 
-      return `On ${new Date(entry.updated_at).toLocaleString()}, ${
-        entry.updated_by
-      } (ID: ${entry.updated_by_id}) made the following changes: ${changes}.`;
+      return `On ${new Date(entry.updated_at).toLocaleString()}, ${entry.updated_by
+        } (ID: ${entry.updated_by_id}) made the following changes: ${changes}.`;
     });
 
     res.status(200).json({
