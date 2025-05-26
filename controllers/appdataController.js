@@ -91,11 +91,11 @@ const getAppDataBasedOnFilter = async (req, res) => {
     if (sortFields.length > 0) {
       // Apply user-defined sorting
       sortFields.forEach((field, index) => {
-        sortStage[field] = sortOrders[index] === "desc" ? -1 : 1;
+        sortStage[field] = sortOrders[index] ?.toLowerCase() === "desc" ? -1 : 1;
       });
     } else {
       // Default to created_time if no sort field provided
-      sortStage["created_time"] = 1;
+      sortStage["created_time"] = -1;
     }
 
     filterCriteria.push({ $sort: sortStage });
@@ -181,8 +181,7 @@ const createAppData = async (req, res) => {
         { _id: existingData._id },
         {
           $set: {
-            re_enquired: "Yes",
-            lead_status: "Duplicate"
+            re_enquired: "Yes"
           },
           $push: {
             history: {

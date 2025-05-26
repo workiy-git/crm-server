@@ -12,7 +12,12 @@ const handleDuplicateLead = async (collection, newData, insertedId) => {
  
   if (!existingData) {
     // Create a new lead document
-    const replicaData = { ...newData, pageName: "leads" };
+    const replicaData = {
+      ...newData,
+      pageName: "leads",
+      lead_source: newData.enquiry_source || "", // <-- map enquiry_source
+      lead_medium: newData.enquiry_medium || "", // <-- map enquiry_medium
+    };
     delete replicaData._id;
  
     // Generate unique lead_id
